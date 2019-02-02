@@ -1,0 +1,76 @@
+#!/bin/bash
+
+#################################################
+# prjfiles - gather files list
+#
+# How to use
+# run prjfiles with source directories
+#  ex)  prjfiles A_dir B_dir C_dir
+#   OR  prjfiles .
+#
+# this will generate cscope.files, cscope.out, tags
+#################################################
+
+ARGS='-iname *.cpp -o -iname *.cc -o -iname *.h -o -iname *.hh -o -iname *.hpp -o -iname *.c -o -iname *.java -o -iname *.py -o -iname *.xml'
+ADDITIONAL_FILES="*.mk *.xml *.ninja *.idl *.gypi *.gyp *.in *.qml *.bb CMakeLists.txt"
+PRJDIRS=".prjdirs"
+set -f
+for name in $ADDITIONAL_FILES
+do
+    ARGS="$ARGS -o -iname $name"
+done
+if [ $# -ne 0 ]; then
+    DIRS=""
+    CWD=$(pwd)
+    for DIR in $@
+    do
+        if [ -d ${DIR%/} ];then
+            echo "adding sources in ${DIR%/}"
+            echo ${DIR%/} >> $PRJDIRS
+            DIRS="$DIRS $CWD/$DIR"
+        else
+            echo "${DIR%/} is not included!"
+        fi
+    done
+    sort -u $PRJDIRS -o $PRJDIRS
+fi
+
+if [ ! -f $PRJDIRS ]; then
+    echo "Usage: $(basename "$1") dir [dir]"
+    exit 0
+fi
+
+DIRS=$(
+while read line
+do
+echo -n "${line} "
+done < .prjdirs)
+echo "Listing files in $DIRS"
+find $DIRS $ARGS | grep -v 'unittest' > cscope.files
+
+sort -u cscope.files -o cscope.files
+
+if [ -f "$DEVSETTING_GIT/ctags/ctags" ] || [ -f "/usr/bin/ctags" ]; then
+    echo "generating ctags file .."
+
+    if [ -f "$DEVSETTING_GIT/ctags/ctags" ]; then
+        # to ignore c++14 specifier - https://github.com/majutsushi/tagbar/issues/375
+        $DEVSETTING_GIT/ctags/ctags --format=2 --excmd=pattern --extras= --fields=nksaSmt --file-scope=yes -L cscope.files
+    else
+        ctags -L cscope.files --c++-kinds=+p --fields=+iaS --extra=+q
+    fi
+else
+    echo "ctags doesn't exist !!"
+fi
+
+if [ -f "/usr/bin/cscope" ]; then
+    echo "generating cscope.out .."
+    cscope -b
+else
+    echo "cscope doesn't exist !!"
+fi
+
+if [ -d ".git" ]; then
+    echo "This directory contains .git folder. removing $PRJDIRS"
+    rm $PRJDIRS
+fi

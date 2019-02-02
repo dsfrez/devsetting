@@ -1,0 +1,96 @@
+#!/bin/bash
+
+##########################################################
+# Spec Format Converter (MS office document -> pdf)
+#
+# lowriter - convert MS office documents
+#            https://helpmanual.io/help/lowriter/
+# nice - set process priority
+#        https://en.wikipedia.org/wiki/Nice_(Unix)#Use_and_effect
+##########################################################
+
+# Converted pdf files will be stored in below directory
+output_dir=~/public_html/specification/
+
+if [ $# -eq 0 ]
+then
+    search_dir=.
+else
+    for search_dir in "$@"; do
+        process-one-file-at-a-time "$search_dir"
+    done
+fi
+
+echo "###############################################" 
+echo " search dir - $search_dir"
+echo " output dir - $output_dir"
+
+# Convert doc / docx / ppt / pptx
+doc_list=()
+
+while IFS= read -r -d $'\n'; do
+    doc_list+=("$REPLY")
+done < <(find "$search_dir" -type f -name "*.doc*")
+
+while IFS= read -r -d $'\n'; do
+    doc_list+=("$REPLY")
+done < <(find "$search_dir" -type f -name "*.ppt*")
+
+list_length=${#doc_list[*]}
+echo " Convert $list_length files..."
+i=0
+while [ $i -lt $list_length ]
+do
+    input_dir=$(dirname "${doc_list[$i]}")
+    input_name=$(basename "${doc_list[$i]}")
+
+    result_dir=$output_dir$input_dir
+    converted_name="$result_dir/${input_name%.*}.pdf"
+    result_name="$result_dir/${input_name%.*}_converted.pdf"
+
+    mkdir -p "$result_dir"
+
+    if [ -f "$result_name" ]
+    then
+        echo " $i - $input_name already converted"
+    else
+        echo " $i - $input_name -->"
+        nice -n 19 lowriter --convert-to pdf "${doc_list[$i]}" --outdir "$result_dir"
+        mv "$converted_name" "$result_name"
+    fi
+    let i++ 
+done
+
+# Link of original files
+echo " Link original files .."
+
+file_list=()
+
+while IFS= read -r -d $'\n'; do
+    file_list+=("$REPLY")
+done < <(find "$search_dir" -type f -name "*.*")
+
+file_list_length=${#file_list[*]}
+
+echo " searched files : $file_list_length"
+
+i=0
+while [ $i -lt $file_list_length ]
+do
+    input_dir=$(dirname "${file_list[$i]}")
+    input_name=$(basename "${file_list[$i]}")
+
+    result_dir=$output_dir$input_dir
+    result_name="${result_dir%.}/${input_name%.}"
+
+    mkdir -p "$result_dir"
+
+    if ! [ -f "$result_name" ]
+    then
+        ln -s "$(pwd)/$input_dir/$input_name" "$result_name"
+    fi
+    let i++
+done
+
+##################################
+echo "###############################################"
