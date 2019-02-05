@@ -2,8 +2,6 @@
 
 DEVSETTING_DIR=$HOME/.devsetting
 
-systemMessage=""
-
 ## Check current environments #################################################
 supportNVIM=0
 case "$(uname -s)" in
@@ -23,21 +21,6 @@ if [ "$machine" = "Linux" ]; then
     esac
 fi
 
-## Install prerequiste library - need root access #############################
-if [ "$dist" = "SUSE" ]; then
-    echo "SUSE"
-    sudo zypper install --type pattern Basis-Devel
-    sudo zypper install libevent-devel ncurses-devel        # for tmux
-    sudo zypper install pcre-devel zlib-devel xz-devel      # for ag
-    sudo zypper install readline-devel                      # for cgdb
-elif [ "$dist" = "Ubuntu" ]; then
-    echo "Ubuntu"
-    sudo apt-get install -y build-essential
-    sudo apt-get install -y autotools-dev automake libevent-dev libncurses-dev pkg-config   # for tmux
-    sudo apt-get install -y automake pkg-config libpcre3-dev zlib1g-dev liblzma-dev         # for ag
-fi
-
-## Download external libraries ################################################
 # NeoVim - https://github.com/neovim/neovim/wiki/Installing-Neovim
 if [ $supportNVIM = 1 ] && [ -z "$(command -v nvim)" ]; then
     if [ "$dist" = "SUSE" ]; then
@@ -52,20 +35,57 @@ if [ $supportNVIM = 1 ] && [ -z "$(command -v nvim)" ]; then
     fi
 fi
 
-[ ! -d "$DEVSETTING_DIR/git/tmux" ] &&
-    git clone https://github.com/tmux/tmux.git $DEVSETTING_DIR/git/tmux
-[ ! -d "$DEVSETTING_DIR/git/uctag" ] &&
-    git clone https://github.com/universal-ctags/ctags.git $DEVSETTING_DIR/git/uctag
-[ ! -d "$DEVSETTING_DIR/git/ag" ] &&
-    git clone https://github.com/ggreer/the_silver_searcher.git $DEVSETTING_DIR/git/ag
-[ ! -d "$DEVSETTING_DIR/git/tig" ] &&
-    git clone https://github.com/jonas/tig.git $DEVSETTING_DIR/git/tig
-[ ! -d "$DEVSETTING_DIR/git/cgdb" ] &&
-    git clone git://github.com/cgdb/cgdb.git $DEVSETTING_DIR/git/cgdb
-
-if [ ! -d "$DEVSETTING_DIR/git/lynx" ]; then
-    wget https://invisible-mirror.net/archives/lynx/tarballs/lynx2.8.9rel.1.tar.gz -P $DEVSETTING_DIR/git
-    tar zxvf $DEVSETTING_DIR/git/lynx2.8.9rel.1.tar.gz -C $DEVSETTING_DIR/git
-    rm $DEVSETTING_DIR/git/lynx2.8.9rel.1.tar.gz
-    mv $DEVSETTING_DIR/git/lynx2.8.9rel.1 $DEVSETTING_DIR/git/lynx
+## Install prerequiste library - need root access #############################
+if [ "$dist" = "SUSE" ]; then
+    echo "SUSE"
+    sudo zypper install --type pattern Basis-Devel
+    sudo zypper install libevent-devel ncurses-devel        # for tmux
+    sudo zypper install pcre-devel zlib-devel xz-devel      # for ag
+    sudo zypper install readline-devel                      # for cgdb
+elif [ "$dist" = "Ubuntu" ]; then
+    echo "Ubuntu"
+    sudo apt-get install -y build-essential
+    sudo apt-get install -y autotools-dev automake libevent-dev libncurses-dev pkg-config   # for tmux
+    sudo apt-get install -y automake pkg-config libpcre3-dev zlib1g-dev liblzma-dev         # for ag
 fi
+
+## Download / Install external libraries ######################################
+# TODO: should be implemented with 2d array ....
+LIBS=(  "ag|https://github.com/ggreer/the_silver_searcher.git"
+        "cgdb|git://github.com/cgdb/cgdb.git"
+        "lynx|https://invisible-mirror.net/archives/lynx/tarballs/lynx2.8.9rel.1.tar.gz"
+        "tig|https://github.com/jonas/tig.git"
+        "tmux|https://github.com/tmux/tmux.git"
+        "uctags|https://github.com/universal-ctags/ctags.git"
+     )
+
+for lib in "${LIBS[@]}" ; do
+    KEY="${lib%%|*}"
+    VALUE="${lib##*|}"
+
+    if [ ! -d "$DEVSETTING_DIR/git/$KEY" ]; then
+        case "$VALUE" in
+            *tar.gz)
+                wget $VALUE -P $DEVSETTING_DIR/git
+                fileName=${VALUE##*/}
+                tar zxvf $DEVSETTING_DIR/git/$fileName -C $DEVSETTING_DIR/git
+                rm $DEVSETTING_DIR/git/$fileName
+                mv $DEVSETTING_DIR/git/${fileName%.tar.gz} $DEVSETTING_DIR/git/$KEY
+                ;;
+            *.git)
+                git clone $VALUE $DEVSETTING_DIR/git/$KEY
+                ;;
+            *github*)
+                git clone $VALUE $DEVSETTING_DIR/git/$KEY
+                ;;
+            *)
+                echo "Unable to download library"
+                echo "Lib: $KEY / Address: $VALUE"
+                ;;
+        esac
+    fi
+done
+
+#if [ ! "$dist" = "SUSE" ] || [ ! "$dist" = "Ubuntu" ]; then
+#    echo "this is not suse"
+#fi
