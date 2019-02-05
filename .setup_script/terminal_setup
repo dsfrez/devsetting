@@ -1,7 +1,6 @@
 #!/bin/sh
 
-## Script preferences #########################################################
-DEVSETTING_GIT=`dirname $(readlink -f "$0")`
+DEVSETTING_GIT=$(git rev-parse --show-toplevel)
 DEVSETTING_DIR=$HOME/.devsetting
 
 systemMessage=""
@@ -15,9 +14,8 @@ case "$(uname -s)" in
     Darwin*)    machine=Mac; supportNVIM=1;;
     CYGWIN*)    machine=Cygwin;;
     MINGW*)     machine=MinGw;;
-    *)          machine="UNKNOWN:${unameOut}"
+    *)          machine="UNKNOWN:$(uname -s)"
 esac
-# TODO: check distribution of linux
 
 ## generate / backup configurations ###########################################
 [ ! -d "$DEVSETTING_DIR/bin" ] && mkdir -p $DEVSETTING_DIR/bin
@@ -62,19 +60,20 @@ if [ $supportNVIM = 1 ]; then
         systemMessage=$SYSTEM_MESSAGE$msg
         unlink $HOME/.config/nvim/init.vim
     fi
+    mkdir -p $HOME/.config/nvim
     ln -s $HOME/.vimrc $HOME/.config/nvim/init.vim
 fi
 
 
 # add bashrc/zshrc setting into init script
-bashInit="devsetting.bash"
+bashInit=".devsetting.bash"
 bashRc="$HOME/.bashrc"
 [ ! -f $bashRc ] && touch $bashRc
 if [[ $(grep -nw $bashInit $bashRc) == "" ]]; then
     echo "[ -f $DEVSETTING_DIR/config/$bashInit ] && source $DEVSETTING_DIR/config/$bashInit" >> $bashRc
 fi
 
-zshInit="devsetting.zsh"
+zshInit=".devsetting.zsh"
 zshRc="$HOME/.zshrc"
 if [ -f $zshRc ] && [[ $(grep -nw $zshInit $zshRc) != "" ]]; then
     : # do nothing
@@ -92,25 +91,6 @@ else
     echo "# please comment out below line and write your setting" >> $zshRc
     echo "[ -f $DEVSETTING_DIR/config/$zshInit ] && source $DEVSETTING_DIR/config/$zshInit" >> $zshRc
 fi
-
-## Download external libraries ################################################
-# NeoVim - https://github.com/neovim/neovim/wiki/Installing-Neovim
-# TODO: check nvim version
-if [ $supportNVIM = 1 ] && [ -z "$(command -v nvim)" ]; then
-    if [ "$machine" = "Linux" ]; then
-        cd $DEVSETTING_DIR/bin
-        wget https://github.com/neovim/neovim/releases/download/v0.3.4/nvim.appimage --no-check-certificate
-        chmod +x nvim.appimage
-        mv nvim.appimage nvim
-    fi
-fi
-
-[ ! -d "$DEVSETTING_DIR/git/tmux" ] &&
-    git clone https://github.com/tmux/tmux.git $DEVSETTING_DIR/git/tmux
-[ ! -d "$DEVSETTING_DIR/git/uctag" ] &&
-    git clone https://github.com/universal-ctags/ctags.git $DEVSETTING_DIR/git/uctag
-[ ! -d "$DEVSETTING_DIR/git/ag" ] &&
-    git clone https://github.com/ggreer/the_silver_searcher.git $DEVSETTING_DIR/git/ag
 
 ## Post processing ############################################################
 [ -z "$(ls -A $backupDir)" ] && rmdir $backupDir
