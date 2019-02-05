@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#git pull -q
+
+DEVSETTING_GIT=`dirname $(readlink -f "$0")`
+
+cd $DEVSETTING_GIT/.setup_script
+./terminal_setup
+./library_setup
+#./temp_setup
+
