@@ -1,0 +1,206 @@
+echo "load common config"
+
+source $DEVSETTING_DIR/.env
+
+# for WSL
+if [ "$DEVSETTING_WSL" = "1" ]; then
+    umask 022
+fi
+
+# for Cygwin
+if [ "$DEVSETTING_TYPE" = "Cygwin" ]; then
+    export CHERE_INVOKING=1
+fi
+
+# for NeoVim
+if [ "$DEVSETTING_TYPE" = "Linux" ] || [ "$DEVSETTING_TYPE" = "Mac" ]; then
+    export XDG_CONFIG_HOME=$HOME/.config
+fi
+
+## Path #######################################################################
+[ -d "$HOME/.local/bin" ] && export PATH=$PATH:$HOME/.local/bin
+export PATH=$PATH:$DEVSETTING_DIR/script
+
+## Preferences ################################################################
+export TERM=xterm-256color
+
+# FZF Setting - https://github.com/junegunn/fzf.vim/issues/12
+export PATH=$PATH:$HOME/.fzf/bin
+export FZF_DEFAULT_COMMAND='GIT_ROOT=$(git rev-parse --show-toplevel);if [ -e $GIT_ROOT/cscope.files ]; then cat $GIT_ROOT/cscope.files; else find ./ -type f ; fi'
+export FZF_COMPLETION_OPTS='+c -x'
+export FZF_TMUX=1
+export FZF_DEFAULT_OPTS='--extended-exact --bind ctrl-f:page-down,ctrl-b:page-up --color fg:252,bg:233,hl:67,fg+:252,bg+:235,hl+:121 --color info:144,prompt:161,spinner:135,pointer:135,marker:118'
+
+# Aliases #####################################################################
+
+alias c='clear'
+alias q='exit'
+alias t='tmux'
+alias u='cd ..' # TODO: enhance this function
+
+alias gitcommit='git add -A; git commit'
+alias gitreset='git reset --hard'
+alias gitclean='git reset --hard;git clean -fdx'
+alias gitstatus='git status'
+alias gitsubmodule='git submodule update --init --recursive'
+alias gitc='git add -A; git commit --amend'
+function gitpush() {
+    # push a commit with a reviewer (ex: gitpush TARGETBRANCH reviewer@email.com)
+    git push --receive-pack="git receive-pack --reviewer $2" origin HEAD:refs/for/$1
+}
+
+export DEVSETTING_BIN=$DEVSETTING_DIR/bin
+vim_func ()
+{
+    if [ -f "$DEVSETTING_BIN/nvim" ]; then
+        "$DEVSETTING_BIN/nvim" "$@"
+    elif [ -f "$(command -v nvim)" ]; then
+        "$(command -v nvim)" "$@"
+    else
+        vim "$@"
+    fi
+    return 0
+}
+alias vi=vim_func
+
+ag_func()
+{
+    if [ -f "$DEVSETTING_BIN/ag" ]; then
+        "$DEVSETTING_BIN/ag" "$@"
+    elif [ -f "$(command -v ag)" ]; then
+        "$(command -v ag)" "$@"
+    else
+        echo "Please install The Silver Searcher - https://github.com/ggreer/the_silver_searcher"
+        return -1
+    fi
+    return 0
+}
+alias ag=ag_func
+
+cgdb_func()
+{
+    if [ -f "$DEVSETTING_BIN/cgdb" ]; then
+        "$DEVSETTING_BIN/cgdb" "$@"
+    elif [ -f "$(command -v cgdb)" ]; then
+        "$(command -v cgdb)" "$@"
+    else
+        echo "Please install cgdb - https://cgdb.github.io"
+        return -1
+    fi
+    return 0
+}
+alias cgdb=cgdb_func
+
+lynx_func()
+{
+    # Incomplete ...
+    if [ -f "$DEVSETTING_BIN/lynx" ]; then
+        cat "$1 | $DEVSETTING_BIN/lynx -cfg=$DEVSETTING_DIR/git/lynx/lynx.cfg -lss=$DEVSETTING_DIR/git/lynx/samples/lynx.lss -stdin"
+    else
+        echo "Please install lynx - https://lynx.browser.org/"
+        return -1
+    fi
+}
+alias open_html=lynx_func
+
+tig_func()
+{
+    if [ -f "$DEVSETTING_BIN/tig" ]; then
+        "$DEVSETTING_BIN/tig" "$@"
+    elif [ -f "$(command -v tig)" ]; then
+        "$(command -v tig)" "$@"
+    else
+        echo "Please install tig - https://jonas.github.io/tig"
+        return -1
+    fi
+    return 0
+}
+alias tig=tig_func
+
+tmux_func()
+{
+    TERM=screen-256color
+    if [ -f "$DEVSETTING_BIN/tmux" ]; then
+        "$DEVSETTING_BIN/tmux" "$@"
+    elif [ -f "$(command -v tmux)" ]; then
+        "$(command -v tmux)" "$@"
+    else
+        echo "Please install tmux - https://github.com/tmux/tmux/wiki"
+        return -1
+    fi
+    return 0
+}
+alias tmux=tmux_func
+
+ctags_func ()
+{
+    if [ -f "$DEVSETTING_BIN/uctags" ]; then
+        "$DEVSETTING_BIN/uctags" "$@"
+    elif [ -f "$(command -v ctags)" ]; then
+        "$(command -v ctags)" "$@"
+    else
+        echo "Please install universal ctags(https://github.com/universal-ctags/ctags.git) or exuberant-ctags"
+        return -1
+    fi
+    return 0
+}
+alias ctags=ctags_func
+
+# function cd_func
+# This function defines a 'cd' replacement function capable of keeping,
+# displaying and accessing history of visited directories, up to 10 entries.
+# To use it, uncomment it, source this file and try 'cd --'.
+# acd_func 1.0.5, 10-nov-2004
+# Petar Marinov, http:/geocities.com/h2428, this is public domain
+cd_func ()
+{
+    local x2 the_new_dir adir index
+    local -i cnt
+
+    if [[ $1 ==  "--" ]]; then
+        dirs -v
+        return 0
+    fi
+
+    the_new_dir=$1
+    [[ -z $1 ]] && the_new_dir=$HOME
+
+    if [[ ${the_new_dir:0:1} == '-' ]]; then
+        #
+        # Extract dir N from dirs
+        index=${the_new_dir:1}
+        [[ -z $index ]] && index=1
+        adir=$(dirs +$index)
+        [[ -z $adir ]] && return 1
+        the_new_dir=$adir
+    fi
+
+    #
+    # '~' has to be substituted by ${HOME}
+    [[ ${the_new_dir:0:1} == '~' ]] && the_new_dir="${HOME}${the_new_dir:1}"
+
+    #
+    # Now change to the new dir and add to the top of the stack
+    pushd "${the_new_dir}" > /dev/null
+    [[ $? -ne 0 ]] && return 1
+    the_new_dir=$(pwd)
+
+    #
+    # Trim down everything beyond 11th entry
+    popd -n +11 2>/dev/null 1>/dev/null
+
+    #
+    # Remove any other occurence of this dir, skipping the top of the stack
+    for ((cnt=1; cnt <= 10; cnt++)); do
+        x2=$(dirs +${cnt} 2>/dev/null)
+        [[ $? -ne 0 ]] && return 0
+        [[ ${x2:0:1} == '~' ]] && x2="${HOME}${x2:1}"
+        if [[ "${x2}" == "${the_new_dir}" ]]; then
+            popd -n +$cnt 2>/dev/null 1>/dev/null
+            cnt=cnt-1
+        fi
+    done
+
+    return 0
+}
+alias cd=cd_func
