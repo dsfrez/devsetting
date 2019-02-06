@@ -46,46 +46,65 @@ elif [ "$dist" = "Ubuntu" ]; then
     echo "Ubuntu"
     sudo apt-get install -y build-essential
     sudo apt-get install -y autotools-dev automake libevent-dev libncurses-dev pkg-config   # for tmux
+    sudo apt-get install -y texinfo libreadline-dev                                         # for cgdb
     sudo apt-get install -y automake pkg-config libpcre3-dev zlib1g-dev liblzma-dev         # for ag
 fi
 
 ## Download / Install external libraries ######################################
-# TODO: should be implemented with 2d array ....
-LIBS=(  "ag|https://github.com/ggreer/the_silver_searcher.git"
-        "cgdb|git://github.com/cgdb/cgdb.git"
-        "lynx|https://invisible-mirror.net/archives/lynx/tarballs/lynx2.8.9rel.1.tar.gz"
-        "tig|https://github.com/jonas/tig.git"
-        "tmux|https://github.com/tmux/tmux.git"
-        "uctags|https://github.com/universal-ctags/ctags.git"
-     )
-
-for lib in "${LIBS[@]}" ; do
-    KEY="${lib%%|*}"
-    VALUE="${lib##*|}"
-
-    if [ ! -d "$DEVSETTING_DIR/git/$KEY" ]; then
-        case "$VALUE" in
+install_lib() {
+    NAME=$1
+    SRC=$2
+    OUT=$3
+    # Download Library
+    if [ ! -d "$DEVSETTING_DIR/git/$NAME" ]; then
+        case "$SRC" in
             *tar.gz)
-                wget $VALUE -P $DEVSETTING_DIR/git --no-check-certificate
-                fileName=${VALUE##*/}
+                wget $SRC -P $DEVSETTING_DIR/git --no-check-certificate
+                fileName=${SRC##*/}
                 tar zxvf $DEVSETTING_DIR/git/$fileName -C $DEVSETTING_DIR/git
                 rm $DEVSETTING_DIR/git/$fileName
-                mv $DEVSETTING_DIR/git/${fileName%.tar.gz} $DEVSETTING_DIR/git/$KEY
+                mv $DEVSETTING_DIR/git/${fileName%.tar.gz} $DEVSETTING_DIR/git/$NAME
                 ;;
             *.git)
-                git clone $VALUE $DEVSETTING_DIR/git/$KEY
+                git clone $SRC $DEVSETTING_DIR/git/$NAME
                 ;;
             *github*)
-                git clone $VALUE $DEVSETTING_DIR/git/$KEY
+                git clone $SRC $DEVSETTING_DIR/git/$NAME
                 ;;
             *)
                 echo "Unable to download library"
-                echo "Lib: $KEY / Address: $VALUE"
+                echo "Lib: $NAME / Address: $SRC"
                 ;;
         esac
     fi
-done
 
-#if [ ! "$dist" = "SUSE" ] || [ ! "$dist" = "Ubuntu" ]; then
-#    echo "this is not suse"
-#fi
+    outputName="$DEVSETTING_DIR/git/$NAME/$OUT"
+    if [ "$machine" = "Cygwin" ] || [ "$machine" = "MinGw" ]; then
+        outputName="$outputName.exe"
+    fi
+
+    # Build Library
+    if [ -d "$DEVSETTING_DIR/git/$NAME" ] && [ ! -f $outputName ]; then
+        cd $DEVSETTING_DIR/git/$NAME
+        if [ -f "autogen.sh" ]; then
+            sh ./autogen.sh
+        fi
+        if [ -f "configure" ]; then
+            ./configure && make
+        fi
+    fi
+
+    # Copy Library
+    if [ -f "$outputName" ]; then
+        cp -f "$outputName" "$DEVSETTING_DIR/bin/$NAME"
+    else
+        echo "$NAME was not installed"
+    fi
+}
+
+install_lib ag https://github.com/ggreer/the_silver_searcher.git ag
+install_lib cgdb git://github.com/cgdb/cgdb.git cgdb/cgdb
+install_lib lynx https://invisible-mirror.net/archives/lynx/tarballs/lynx2.8.9rel.1.tar.gz lynx
+install_lib tig https://github.com/jonas/tig.git src/tig
+install_lib tmux https://github.com/tmux/tmux.git tmux
+install_lib uctags https://github.com/universal-ctags/ctags.git ctags
