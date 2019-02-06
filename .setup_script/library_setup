@@ -78,6 +78,11 @@ install_lib() {
         esac
     fi
 
+    if [ -z $OUT ]; then
+        echo "just downloading"
+        return 0
+    fi
+
     outputName="$DEVSETTING_DIR/git/$NAME/$OUT"
     if [ "$machine" = "Cygwin" ] || [ "$machine" = "MinGw" ]; then
         outputName="$outputName.exe"
@@ -109,5 +114,6 @@ if [ ! "$dist" = "SUSE" ]; then
 fi
 install_lib lynx https://invisible-mirror.net/archives/lynx/tarballs/lynx2.8.9rel.1.tar.gz lynx
 install_lib tig https://github.com/jonas/tig.git src/tig
+install_lib tig-molokai https://github.com/edentsai/tig-theme-molokai-like.git
 install_lib tmux https://github.com/tmux/tmux.git tmux
 install_lib uctags https://github.com/universal-ctags/ctags.git ctags
