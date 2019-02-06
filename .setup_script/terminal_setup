@@ -17,6 +17,19 @@ case "$(uname -s)" in
     *)          machine="UNKNOWN:$(uname -s)"
 esac
 
+rm -f "$DEVSETTING_DIR/.env"
+touch "$DEVSETTING_DIR/.env"
+
+echo "# Do not modify this file !!" >> "$DEVSETTING_DIR/.env"
+echo "export DEVSETTING_TYPE=$machine" >> "$DEVSETTING_DIR/.env"
+if [ "$machine" = "Linux" ]; then
+    if grep -qE "(Microsoft|WSL)" /proc/version &> /dev/null ; then
+        echo "export DEVSETTING_WSL=1" >> "$DEVSETTING_DIR/.env"
+    else
+        echo "export DEVSETTING_WSL=0" >> "$DEVSETTING_DIR/.env"
+    fi
+fi
+
 ## generate / backup configurations ###########################################
 [ ! -d "$DEVSETTING_DIR/bin" ] && mkdir -p $DEVSETTING_DIR/bin
 [ ! -d "$DEVSETTING_DIR/git" ] && mkdir -p $DEVSETTING_DIR/git
@@ -63,7 +76,6 @@ if [ $supportNVIM = 1 ]; then
     mkdir -p $HOME/.config/nvim
     ln -s $HOME/.vimrc $HOME/.config/nvim/init.vim
 fi
-
 
 # add bashrc/zshrc setting into init script
 bashInit=".devsetting.bash"
