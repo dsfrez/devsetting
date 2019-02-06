@@ -1,7 +1,9 @@
 #!/bin/sh
 
 DEVSETTING_GIT=$(git rev-parse --show-toplevel)
+
 DEVSETTING_DIR=$HOME/.devsetting
+[ ! -d "$DEVSETTING_DIR" ] && mkdir -p $DEVSETTING_DIR
 
 systemMessage=""
 
