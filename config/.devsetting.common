@@ -93,7 +93,7 @@ lynx_func()
 {
     # Incomplete ...
     if [ -f "$DEVSETTING_BIN/lynx" ]; then
-        cat "$1 | $DEVSETTING_BIN/lynx -cfg=$DEVSETTING_DIR/git/lynx/lynx.cfg -lss=$DEVSETTING_DIR/git/lynx/samples/lynx.lss -stdin"
+        cat "$1" | $DEVSETTING_BIN/lynx -cfg=$DEVSETTING_DIR/git/lynx/lynx.cfg -lss=$DEVSETTING_DIR/git/lynx/samples/lynx.lss -stdin
     else
         echo "Please install lynx - https://lynx.browser.org/"
         return -1
