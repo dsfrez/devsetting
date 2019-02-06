@@ -22,7 +22,7 @@ if [ "$machine" = "Linux" ]; then
 fi
 
 # NeoVim - https://github.com/neovim/neovim/wiki/Installing-Neovim
-if [ $supportNVIM = 1 ] && [ -z "$(command -v nvim)" ]; then
+if [ $supportNVIM = 1 ] && [ -z "$(command -v nvim)" ] && [ ! -f "$DEVSETTING_DIR/bin/nvim" ]; then
     if [ "$dist" = "SUSE" ]; then
         cd $DEVSETTING_DIR/bin
         wget https://github.com/neovim/neovim/releases/download/v0.3.4/nvim.appimage --no-check-certificate
@@ -103,7 +103,10 @@ install_lib() {
 }
 
 install_lib ag https://github.com/ggreer/the_silver_searcher.git ag
-install_lib cgdb git://github.com/cgdb/cgdb.git cgdb/cgdb
+if [ ! "$dist" = "SUSE" ]; then
+    # cgdb has build errors in SUSE ..
+    install_lib cgdb git://github.com/cgdb/cgdb.git cgdb/cgdb
+fi
 install_lib lynx https://invisible-mirror.net/archives/lynx/tarballs/lynx2.8.9rel.1.tar.gz lynx
 install_lib tig https://github.com/jonas/tig.git src/tig
 install_lib tmux https://github.com/tmux/tmux.git tmux
