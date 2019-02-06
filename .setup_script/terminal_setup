@@ -69,13 +69,13 @@ fi
 bashInit=".devsetting.bash"
 bashRc="$HOME/.bashrc"
 [ ! -f $bashRc ] && touch $bashRc
-if [[ $(grep -nw $bashInit $bashRc) == "" ]]; then
+if [ "$(grep -nw $bashInit $bashRc)" = "" ]; then
     echo "[ -f $DEVSETTING_DIR/config/$bashInit ] && source $DEVSETTING_DIR/config/$bashInit" >> $bashRc
 fi
 
 zshInit=".devsetting.zsh"
 zshRc="$HOME/.zshrc"
-if [ -f $zshRc ] && [[ $(grep -nw $zshInit $zshRc) != "" ]]; then
+if [ -f $zshRc ] && [ ! "$(grep -nw $zshInit $zshRc)" = "" ]; then
     : # do nothing
 else
     if [ -f $zshRc ]; then
