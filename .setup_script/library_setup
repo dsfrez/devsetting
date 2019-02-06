@@ -66,7 +66,7 @@ for lib in "${LIBS[@]}" ; do
     if [ ! -d "$DEVSETTING_DIR/git/$KEY" ]; then
         case "$VALUE" in
             *tar.gz)
-                wget $VALUE -P $DEVSETTING_DIR/git
+                wget $VALUE -P $DEVSETTING_DIR/git --no-check-certificate
                 fileName=${VALUE##*/}
                 tar zxvf $DEVSETTING_DIR/git/$fileName -C $DEVSETTING_DIR/git
                 rm $DEVSETTING_DIR/git/$fileName
