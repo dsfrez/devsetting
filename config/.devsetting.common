@@ -52,7 +52,7 @@ vim_func ()
 {
     if [ -f "$DEVSETTING_BIN/nvim" ]; then
         "$DEVSETTING_BIN/nvim" "$@"
-    elif [ -f "$(which nvim)" ]; then
+    elif [ -f "$(which nvim 2>/dev/null)" ]; then
         "$(which nvim)" "$@"
     else
         vim "$@"
@@ -65,7 +65,7 @@ ag_func()
 {
     if [ -f "$DEVSETTING_BIN/ag" ]; then
         "$DEVSETTING_BIN/ag" "$@"
-    elif [ -f "$(which ag)" ]; then
+    elif [ -f "$(which ag 2>/dev/null)" ]; then
         "$(which ag)" "$@"
     else
         echo "Please install The Silver Searcher - https://github.com/ggreer/the_silver_searcher"
@@ -79,7 +79,7 @@ cgdb_func()
 {
     if [ -f "$DEVSETTING_BIN/cgdb" ]; then
         "$DEVSETTING_BIN/cgdb" "$@"
-    elif [ -f "$(which cgdb)" ]; then
+    elif [ -f "$(which cgdb 2>/dev/null)" ]; then
         "$(which cgdb)" "$@"
     else
         echo "Please install cgdb - https://cgdb.github.io"
@@ -105,7 +105,7 @@ tig_func()
 {
     if [ -f "$DEVSETTING_BIN/tig" ]; then
         "$DEVSETTING_BIN/tig" "$@"
-    elif [ -f "$(which tig)" ]; then
+    elif [ -f "$(which tig 2>/dev/null)" ]; then
         "$(which tig)" "$@"
     else
         echo "Please install tig - https://jonas.github.io/tig"
@@ -120,7 +120,7 @@ tmux_func()
     TERM=screen-256color
     if [ -f "$DEVSETTING_BIN/tmux" ]; then
         "$DEVSETTING_BIN/tmux" "$@"
-    elif [ -f "$(which tmux)" ]; then
+    elif [ -f "$(which tmux 2>/dev/null)" ]; then
         "$(which tmux)" "$@"
     else
         echo "Please install tmux - https://github.com/tmux/tmux/wiki"
@@ -134,7 +134,7 @@ ctags_func ()
 {
     if [ -f "$DEVSETTING_BIN/uctags" ]; then
         "$DEVSETTING_BIN/uctags" "$@"
-    elif [ -f "$(which ctags)" ]; then
+    elif [ -f "$(which ctags 2>/dev/null)" ]; then
         "$(which ctags)" "$@"
     else
         echo "Please install universal ctags(https://github.com/universal-ctags/ctags.git) or exuberant-ctags"
