@@ -62,8 +62,12 @@ Plug 'vim-scripts/autoload_cscope.vim'
 
 " file explorer - NERD tree
 Plug 'scrooloose/nerdtree'
-" file searcher - FZF
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' } | Plug 'junegunn/fzf.vim'
+" file searcher - ctrlp / FZF
+if $DEVSETTING_TYPE == "Cygwin" || $DEVSETTING_TYPE == "MinGw"
+    Plug 'kien/ctrlp.vim'
+else
+    Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' } | Plug 'junegunn/fzf.vim'
+endif
 
 " source explorer with ctags - Src Explorer
 Plug 'wesleyche/srcexpl', { 'on': 'SrcExplToggle' }
@@ -170,7 +174,12 @@ function! s:setFunctionKeyMap()
     " open new buffer
     nnoremap <silent> <C-N> :enew<CR>
     " open file (with FZF)
-    nnoremap <silent> <C-O> :call FZFWithPrjFile()<CR>
+    if $DEVSETTING_TYPE == "Cygwin" || $DEVSETTING_TYPE == "MinGw"
+        let g:ctrlp_map = '<c-o>'
+    else
+        nnoremap <silent> <C-O> :call FZFWithPrjFile()<CR>
+    endif
+
 
     " set build command for vim
     nnoremap <silent> <F5> :! build_cmd_for_vim.sh<CR>
