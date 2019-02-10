@@ -12,7 +12,8 @@ fi
 # antigen installation. -------------------------------------------------------
 source $DEVSETTING_DIR/antigen.zsh
 antigen use oh-my-zsh
-antigen theme ys
+antigen theme agnoster
+#antigen theme ys
 
 antigen bundle git
 antigen bundle heroku
