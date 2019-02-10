@@ -1,3 +1,5 @@
+export SHELL=$(which zsh)
+
 export DEVSETTING_DIR=$HOME/.devsetting
 
 # setup fzf
