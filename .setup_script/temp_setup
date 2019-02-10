@@ -1,7 +1,0 @@
-#!/bin/sh
-
-echo "git: "
-echo $DEVSETTING_GIT
-
-echo $machine
-echo $supportNVIM

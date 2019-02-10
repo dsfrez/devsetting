@@ -1,3 +1,5 @@
+export SHELL=$(which bash)
+
 export DEVSETTING_DIR=$HOME/.devsetting
 source $DEVSETTING_DIR/config/.devsetting.common
 
