@@ -160,14 +160,16 @@ function! s:setFunctionKeyMap()
     " to avoid auto indent while pasting something
     "nnoremap <silent> <C-F1> :set paste!<CR>
 
-    " move to previous opened buffer
-    nnoremap <silent> <F1> :b #<CR>
-    " move to previous buffer
-    nnoremap <silent> <F2> :bprevious!<CR>
-    " move to next buffer
-    nnoremap <silent> <F3> :bnext!<CR>
     " close current buffer and move to previous buffer
-    nnoremap <silent> <F4> :call CloseBuffer()<CR>
+    nnoremap <silent> <F1> :call CloseBuffer()<CR>
+    " move to previous opened buffer
+    nnoremap <silent> <F2> :b #<CR>
+    " move to previous buffer
+    nnoremap <silent> <F3> :bprevious!<CR>
+    " move to next buffer
+    nnoremap <silent> <F4> :bnext!<CR>
+    " close current buffer and move to previous buffer
+    nnoremap <silent> <C-F4> :call CloseBuffer()<CR>
 
     " open new buffer
     nnoremap <silent> <C-N> :enew<CR>

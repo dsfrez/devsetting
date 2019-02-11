@@ -12,8 +12,8 @@ fi
 # antigen installation. -------------------------------------------------------
 source $DEVSETTING_DIR/antigen.zsh
 antigen use oh-my-zsh
-antigen theme agnoster
-#antigen theme ys
+#antigen theme agnoster
+antigen theme ys
 
 antigen bundle git
 antigen bundle heroku
@@ -26,8 +26,8 @@ antigen bundle uvaes/fzf-marks
 
 antigen apply
 
-eval `dircolors $DEVSETTING_DIR/git/dircolors-solarized/dircolors.256dark`
-source $DEVSETTING_DIR/git/mintty-colors-solarized/sol.dark
+#eval `dircolors $DEVSETTING_DIR/git/dircolors-solarized/dircolors.256dark`
+#source $DEVSETTING_DIR/git/mintty-colors-solarized/sol.dark
 
 # show available tmux sessions - https://jamesoff.net/2017/08/26/tmux-configuration.html
 if [[ -z $TMUX ]]; then
