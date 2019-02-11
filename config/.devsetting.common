@@ -20,7 +20,11 @@ fi
 export PATH=$PATH:$DEVSETTING_DIR/script
 
 ## Preferences ################################################################
-export TERM=xterm-256color
+if [ ! -z $TMUX ]; then
+    export TERM=screen-256color
+else
+    export TERM=xterm-256color
+fi
 
 # FZF Setting - https://github.com/junegunn/fzf.vim/issues/12
 export PATH=$PATH:$HOME/.fzf/bin
@@ -31,7 +35,10 @@ export FZF_DEFAULT_OPTS='--extended-exact --bind ctrl-f:page-down,ctrl-b:page-up
 
 # Aliases #####################################################################
 
+alias ll='ls -al'
+
 alias c='clear'
+alias h='htop'
 alias q='exit'
 alias t='tmux'
 alias u='cd ..' # TODO: enhance this function
