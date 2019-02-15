@@ -37,17 +37,15 @@ fi
 
 ## Install prerequiste library - need root access #############################
 if [ "$dist" = "SUSE" ]; then
-    echo "SUSE"
     sudo zypper install --type pattern Basis-Devel
     sudo zypper install libevent-devel ncurses-devel        # for tmux
     sudo zypper install pcre-devel zlib-devel xz-devel      # for ag
     sudo zypper install readline-devel                      # for cgdb
 elif [ "$dist" = "Ubuntu" ]; then
-    echo "Ubuntu"
-    sudo apt-get install -y build-essential
-    sudo apt-get install -y autotools-dev automake libevent-dev libncurses-dev pkg-config   # for tmux
-    sudo apt-get install -y texinfo libreadline-dev                                         # for cgdb
-    sudo apt-get install -y automake pkg-config libpcre3-dev zlib1g-dev liblzma-dev         # for ag
+    sudo apt-get install -y build-essential autotools-dev automake pkg-config
+    sudo apt-get install -y libevent-dev libncurses-dev         # for tmux
+    sudo apt-get install -y libpcre3-dev zlib1g-dev liblzma-dev # for ag
+    sudo apt-get install -y texinfo libreadline-dev             # for cgdb
 fi
 
 ## Download / Install external libraries ######################################

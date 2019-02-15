@@ -1,5 +1,11 @@
 export SHELL=$(which bash)
 
+zsh_func ()
+{
+    exec /usr/bin/zsh -l
+}
+alias z=zsh_func
+
 export DEVSETTING_DIR=$HOME/.devsetting
 source $DEVSETTING_DIR/config/.devsetting.common
 
