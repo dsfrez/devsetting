@@ -416,7 +416,7 @@ endfunction
 "call InitCtagLocation() - problem exsits ..
 
 " override ctags command
-nnoremap <C-]> :ts <C-R>=expand("<cword>")<CR><CR>
+nnoremap <silent><C-]> :ts <C-R>=expand("<cword>")<CR><CR>
 
 if has('cscope')
     " http://cscope.sourceforge.net/cscope_maps.vim
