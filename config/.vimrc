@@ -69,6 +69,9 @@ else
     Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' } | Plug 'junegunn/fzf.vim'
 endif
 
+" Enhanced C++ highlight
+"Plug 'octol/vim-cpp-enhanced-highlight'
+
 " source explorer with ctags - Src Explorer
 Plug 'wesleyche/srcexpl', { 'on': 'SrcExplToggle' }
 " source info - Tagbar
@@ -285,6 +288,7 @@ set titlestring=%t%(\ %M%)%(\ (%{expand(\"%:p:h\")})%)%(\ %a%)\ -\ %{v:servernam
 set autoread                                " automatic refresh
 set backspace=indent,eol,start              " make backspace work like most other programs
 set cursorline                              " highlight current line
+set cursorcolumn                            " highlight cursor column position
 set noswapfile                              " don't make .swp file
 set novisualbell                            " no visual bell (alert)
 set ruler                                   " show cursor location
@@ -509,3 +513,9 @@ endfunction
 
 call s:ycmSetting()
 call s:deopleteSetting()
+
+"let g:cpp_class_scope_highlight = 1
+"let g:cpp_member_variable_highlight = 1
+"let g:cpp_class_decl_highlight = 1
+"let g:cpp_experimental_template_highlight = 1
+"let g:cpp_concepts_highlight = 1
