@@ -510,6 +510,8 @@ call s:deopleteSetting()
 let g:asyncrun_open = 12
 let g:asyncrun_bell = 1
 
+let g:signify_realtime = 1
+
 function! AsyncBlame() range
     execute 'AsyncRun git blame -L ' . a:firstline . ',' . a:lastline . ' %'
 endfunction
