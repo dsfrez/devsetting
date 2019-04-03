@@ -110,6 +110,7 @@ call s:useDeoplete()
 Plug 'ronakg/quickr-preview.vim'
 
 " Testing... ------------------------------------
+Plug 'skywind3000/quickmenu.vim'
 
 call plug#end()
 
@@ -148,7 +149,8 @@ endfunction
 
 function! s:setFunctionKeyMap()
     " to avoid auto indent while pasting something
-    nnoremap <silent> <F1> :set paste!<CR>
+    "nnoremap <silent> <F1> :set paste!<CR>
+    nnoremap <silent> <F1> :call quickmenu#toggle(0)<CR>
 
     " move to previous opened buffer
     nnoremap <silent> <F2> :b #<CR>
@@ -170,20 +172,17 @@ function! s:setFunctionKeyMap()
 
 
     " set build command for vim
-    nnoremap <silent> <F5> :! build_cmd_for_vim.sh<CR>
+    "nnoremap <silent> <F5> :! build_cmd_for_vim.sh<CR>
+    " open file explorer
+    nnoremap <silent> <F5> :NERDTreeToggle<CR>
+    " open file explorer at current folder
+    nnoremap <silent> <C-F5> :NERDTreeFind<CR>
 
     " switch to .h <-> .cc => TODO: implement this feature with FZF
     nnoremap <silent> <F8> :e %:p:s,.h$,.X123X,:s,.cc$,.h,:s,.X123X$,.cc,<CR>
     " Highlight Word
     nnoremap <silent> <S-F8> :call MarkCurrentText()<CR>
 
-    " toggle cursorcolumn - show current cursor postion
-    nnoremap <silent> <F9> :set cursorcolumn!<CR>
-
-    " open file explorer
-    nnoremap <silent> <F10> :NERDTreeToggle<CR>
-    " open file explorer at current folder
-    nnoremap <silent> <C-F10> :NERDTreeFind<CR>
     " open source explorer (definition) - TODO: remove this plugin :(
     nnoremap <silent> <F11> :SrcExplToggle<CR>
     " open tag information
@@ -518,3 +517,19 @@ endfunction
 vnoremap b                 :call AsyncBlame()<CR>
 
 nnoremap <leader>s         :Ag <C-R>=expand("<cword>")<CR><CR>
+
+
+" Clear all the items
+call g:quickmenu#reset()
+
+" Enable cursorline (:) and cmdline help (H)
+let g:quickmenu_options = "HL"
+
+call g:quickmenu#append("# Vim Preferences", '')
+call g:quickmenu#append("Toggle Paste", 'set paste!', "Set/Unset PASTE mode to avoid unintended indentation")
+call g:quickmenu#append("Toggle Cursorcolumn", 'set cursorcolumn!', "Show/Hide cursor column")
+
+call g:quickmenu#append("# Navigation", '')
+call g:quickmenu#append("Open NerdTree", 'NERDTreeToggle', "Open File Navigator - F5")
+call g:quickmenu#append("Open Current File Location", 'NERDTreeFind', "Open File Navigator - Ctrl-F5")
+call g:quickmenu#append("# Build/Run", '')
