@@ -47,6 +47,7 @@ Plug 'vim-scripts/autoload_cscope.vim'
 
 " file explorer - NERD tree
 Plug 'scrooloose/nerdtree'
+Plug 'Xuyuanp/nerdtree-git-plugin'
 " file searcher - ctrlp / FZF
 if $DEVSETTING_TYPE == "Cygwin" || $DEVSETTING_TYPE == "MinGw"
     Plug 'kien/ctrlp.vim'

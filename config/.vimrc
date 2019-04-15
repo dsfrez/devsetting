@@ -17,9 +17,10 @@ if has('persistent_undo')
     set undofile
 endif
 
-let devsettingConfig = '$HOME/.devsetting/config'
+" Load vim settings
+let configLocation = '$HOME/.devsetting/config'
 
-let devsettingConfigPlug = expand(devsettingConfig . '/plugin.vim')
-if !empty(glob(devsettingConfigPlug))
-    exec ':source ' . devsettingConfigPlug
+let pluginVim = expand(configLocation . '/plugin.vim')
+if !empty(glob(pluginVim))
+    exec ':source ' . pluginVim
 endif
