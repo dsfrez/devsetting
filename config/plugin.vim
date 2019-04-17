@@ -518,7 +518,7 @@ endfunction
 vnoremap b                 :call AsyncBlame()<CR>
 
 nnoremap <leader>s         :Ag <C-R>=expand("<cword>")<CR><CR>
-
+nnoremap <leader>S         :Ag <C-R>=expand("<cWORD>")<CR><CR>
 
 " Clear all the items
 call g:quickmenu#reset()
@@ -526,11 +526,11 @@ call g:quickmenu#reset()
 " Enable cursorline (:) and cmdline help (H)
 let g:quickmenu_options = "HL"
 
-call g:quickmenu#append("# Vim Preferences", '')
-call g:quickmenu#append("Toggle Paste", 'set paste!', "Set/Unset PASTE mode to avoid unintended indentation")
-call g:quickmenu#append("Toggle Cursorcolumn", 'set cursorcolumn!', "Show/Hide cursor column")
-
 call g:quickmenu#append("# Navigation", '')
 call g:quickmenu#append("Open NerdTree", 'NERDTreeToggle', "Open File Navigator - F5")
 call g:quickmenu#append("Open Current File Location", 'NERDTreeFind', "Open File Navigator - Ctrl-F5")
-call g:quickmenu#append("# Build/Run", '')
+
+call g:quickmenu#append("# Vim Preferences", '')
+call g:quickmenu#append("Toggle Paste", 'set paste!', "Set/Unset PASTE mode to avoid unintended indentation")
+call g:quickmenu#append("Toggle Cursorcolumn", 'set cursorcolumn!', "Show/Hide cursor column")
+call g:quickmenu#append("Toggle Word wrap", 'set wrap!', "Set/Unset word wrap")
