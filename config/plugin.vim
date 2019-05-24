@@ -35,8 +35,17 @@ Plug 'blueyed/vim-diminactive'
 " - https://github.com/skywind3000/asyncrun.vim/wiki/Better-way-for-C-and-Cpp-development-in-Vim-8
 Plug 'skywind3000/asyncrun.vim'
 
+" Vim org mode - based on Emacs’ Org-Mode
+Plug 'jceb/vim-orgmode'
+
 " Text filtering and alignment
 Plug 'godlygeek/tabular'
+
+" UML - http://plantuml.com
+" TODO: sudo zypper install java
+"       https://gitlab.com/graphviz/graphviz.git
+Plug 'scrooloose/vim-slumlord'
+Plug 'aklt/plantuml-syntax'
 
 " git with vim - Fugitive, gitgutter
 Plug 'tpope/vim-fugitive'
@@ -197,7 +206,7 @@ function! s:setEditorKeyMap()
     vmap <C-v> c<ESC>"+p
     imap <C-v> <ESC>"+pa
 
-    " Inverse Tab
+    " Inverse Tab - TODO: remove this ...
     nnoremap <S-Tab> <<
     inoremap <S-Tab> <C-d>
 
@@ -527,8 +536,10 @@ call g:quickmenu#reset()
 let g:quickmenu_options = "HL"
 
 call g:quickmenu#append("# Navigation", '')
+"call g:quickmenu#append("Close Current Buffer", 'CloseBuffer', "Close Current Buffer - Ctrl-F4")
 call g:quickmenu#append("Open NerdTree", 'NERDTreeToggle', "Open File Navigator - F5")
 call g:quickmenu#append("Open Current File Location", 'NERDTreeFind', "Open File Navigator - Ctrl-F5")
+"function! CloseBuffer()
 
 call g:quickmenu#append("# Vim Preferences", '')
 call g:quickmenu#append("Toggle Paste", 'set paste!', "Set/Unset PASTE mode to avoid unintended indentation")
