@@ -70,7 +70,7 @@ update_bgcolor
 # Override ssh function to update background color after closing ssh session
 ssh_func ()
 {
-    ssh "$@"; update_bgcolor
+    ssh "$@"; update_bgcolor; clear
 }
 alias ssh=ssh_func
 
