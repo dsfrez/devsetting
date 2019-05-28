@@ -26,15 +26,6 @@ else
     export TERM=xterm-256color
 fi
 
-# Background Color (normal shell, TMUX will set it's own color)
-if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
-    printf '\033]11;#331C1F\007'    # Red
-else
-    printf '\033]11;#282c34\007'    # Dark Blue
-fi
-#printf '\033]11;#192436\007'       # Blue
-#printf '\033]11;#253320\007'       # Gree
-
 # FZF Setting - https://github.com/junegunn/fzf.vim/issues/12
 export PATH=$PATH:$HOME/.fzf/bin
 export FZF_DEFAULT_COMMAND='GIT_ROOT=$(git rev-parse --show-toplevel);if [ -e $GIT_ROOT/cscope.files ]; then cat $GIT_ROOT/cscope.files; else find ./ -type f ; fi'
@@ -62,6 +53,26 @@ function gitpush() {
     # push a commit with a reviewer (ex: gitpush TARGETBRANCH reviewer@email.com)
     git push --receive-pack="git receive-pack --reviewer $2" origin HEAD:refs/for/$1
 }
+
+# Background Color (normal shell, TMUX will set it's own color)
+update_bgcolor ()
+{
+    if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+        printf '\033]11;#331C1F\007'    # Red
+    else
+        printf '\033]11;#282c34\007'    # Dark Blue
+    fi
+    #printf '\033]11;#192436\007'       # Blue
+    #printf '\033]11;#253320\007'       # Gree
+}
+update_bgcolor
+
+# Override ssh function to update background color after closing ssh session
+ssh_func ()
+{
+    ssh "$@"; update_bgcolor
+}
+alias ssh=ssh_func
 
 export DEVSETTING_BIN=$DEVSETTING_DIR/bin
 vim_func ()
