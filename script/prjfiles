@@ -63,12 +63,13 @@ else
     echo "ctags doesn't exist !!"
 fi
 
-if [ -f "/usr/bin/cscope" ]; then
-    echo "generating cscope.out .."
-    cscope -b
-else
-    echo "cscope doesn't exist !!"
-fi
+# don't use cscope ...
+#if [ -f "/usr/bin/cscope" ]; then
+#    echo "generating cscope.out .."
+#    cscope -b
+#else
+#    echo "cscope doesn't exist !!"
+#fi
 
 if [ -d ".git" ]; then
     echo "This directory contains .git folder. removing $PRJDIRS"
