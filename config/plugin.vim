@@ -339,7 +339,8 @@ set list listchars=tab:»·,trail:·,extends:$,nbsp:=
 
 "" Development Environment """"""""""""""""""""""
 "set foldmethod=marker
-set foldmethod=syntax
+"set foldmethod=syntax
+set foldmethod=manual
 "set foldnestmax=1
 set foldlevel=20
 set foldlevelstart=20
@@ -417,35 +418,6 @@ endfunction
 
 " override ctags command
 nnoremap <silent><C-]> :ts <C-R>=expand("<cword>")<CR><CR>
-
-if has('cscope')
-    " http://cscope.sourceforge.net/cscope_maps.vim
-    " use both cscope and ctag for 'ctrl-]', ':ta', and 'vim -t'
-    set cscopetag
-    " check cscope for definition of a symbol before checking ctags: set to 1
-    " if you want the reverse search order.
-    set csto=0
-    " don't show cscope.out loading message (by autoload_cscope.vim)
-    set nocscopeverbose
-
-    " https://stackoverflow.com/questions/24510721/cscope-result-handling-with-quickfix-window
-    " 's'   symbol: find all references to the token under cursor
-    nnoremap <C-\>s yiw:cs find s <C-R>=expand("<cword>")<CR><CR>:bd<CR>:cwindow<CR>/<C-R>0<CR>
-    " 'g'   global: find global definition(s) of the token under cursor
-    nnoremap <C-\>g yiw:cs find g <C-R>=expand("<cword>")<CR><CR>:bd<CR>:cwindow<CR>/<C-R>0<CR>
-    "nnoremap <C-\>c yiw:cs find c <C-R>=expand("<cword>")<CR><CR>:bd<CR>:cwindow<CR>/<C-R>0<CR>
-    nmap <C-\>c :cs find c <C-R>=expand("<cword>")<CR><CR>
-    nmap <C-\>t :cs find t <C-R>=expand("<cword>")<CR><CR>
-    nmap <C-\>e :cs find e <C-R>=expand("<cword>")<CR><CR>
-    nmap <C-\>f :cs find f <C-R>=expand("<cfile>")<CR><CR>
-    nnoremap <C-\>i yiw:cs find i <C-R>=expand("<cword>")<CR><CR>:bd<CR>:cwindow<CR>/<C-R>0<CR>
-    nmap <C-\>d :cs find d <C-R>=expand("<cword>")<CR><CR>
-
-    if has('quickfix')
-        set cscopequickfix=s-,c-,d-,i-,t-,e-,g-
-        nnoremap <C-]>s :set cscopequickfix=s+<CR> :cs find s <C-R>=expand("<cword>")<CR><CR>
-    endif
-endif
 " }}}
 
 " FZF config
@@ -528,6 +500,23 @@ vnoremap b                 :call AsyncBlame()<CR>
 
 nnoremap <leader>s         :Ag <C-R>=expand("<cword>")<CR><CR>
 nnoremap <leader>S         :Ag <C-R>=expand("<cWORD>")<CR><CR>
+
+" Show Shell Command in vim
+command! -complete=shellcmd -nargs=+ S call s:RunShellCommand(<q-args>)
+function! s:RunShellCommand(cmdline)
+  let expanded_cmdline = a:cmdline
+  for part in split(a:cmdline, ' ')
+     if part[0] =~ '\v[%#<]'
+        let expanded_part = fnameescape(expand(part))
+        let expanded_cmdline = substitute(expanded_cmdline, part, expanded_part, '')
+     endif
+  endfor
+  botright new
+  setlocal buftype=nofile bufhidden=wipe nobuflisted noswapfile nowrap
+  call setline(1, a:cmdline)
+  execute '$read !'. expanded_cmdline
+  setlocal nomodifiable
+endfunction
 
 " Clear all the items
 call g:quickmenu#reset()
