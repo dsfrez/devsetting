@@ -36,7 +36,7 @@ Plug 'blueyed/vim-diminactive'
 Plug 'skywind3000/asyncrun.vim'
 
 " Vim org mode - based on Emacs’ Org-Mode
-Plug 'jceb/vim-orgmode'
+"Plug 'jceb/vim-orgmode'
 
 " Text filtering and alignment
 Plug 'godlygeek/tabular'
@@ -150,6 +150,24 @@ function! FZFWithPrjFile()
     endif
     exec ':FZF'
 endfunction
+
+function! s:buflist()
+  redir => ls
+  silent ls
+  redir END
+  return split(ls, '\n')
+endfunction
+
+function! s:bufopen(e)
+  execute 'buffer' matchstr(a:e, '^[ 0-9]*')
+endfunction
+
+nnoremap <silent> <Leader>b :call fzf#run({
+\   'source':  reverse(<sid>buflist()),
+\   'sink':    function('<sid>bufopen'),
+\   'options': '+m',
+\   'down':    len(<sid>buflist()) + 2
+\ })<CR>
 
 " If you want to mark a word only, please use <leader>m
 function! MarkCurrentText()
@@ -411,10 +429,10 @@ function! InitCtagLocation()
     let root = split(system('git rev-parse --show-toplevel'), '\n')[0]
     let tagsLocation = expand(root . '/tags')
     if filereadable(expand(tagsLocation))
-        exec ':set tags+=' . tagsLocation
+        exec ':set tags=' . tagsLocation
     endif
 endfunction
-"call InitCtagLocation() - problem exsits ..
+call InitCtagLocation()
 
 " override ctags command
 nnoremap <silent><C-]> :ts <C-R>=expand("<cword>")<CR><CR>
