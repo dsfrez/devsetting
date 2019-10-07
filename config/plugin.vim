@@ -151,24 +151,6 @@ function! FZFWithPrjFile()
     exec ':FZF'
 endfunction
 
-function! s:buflist()
-  redir => ls
-  silent ls
-  redir END
-  return split(ls, '\n')
-endfunction
-
-function! s:bufopen(e)
-  execute 'buffer' matchstr(a:e, '^[ 0-9]*')
-endfunction
-
-nnoremap <silent> <Leader>b :call fzf#run({
-\   'source':  reverse(<sid>buflist()),
-\   'sink':    function('<sid>bufopen'),
-\   'options': '+m',
-\   'down':    len(<sid>buflist()) + 2
-\ })<CR>
-
 " If you want to mark a word only, please use <leader>m
 function! MarkCurrentText()
     let currWord = expand('<cword>')
@@ -197,7 +179,10 @@ function! s:setFunctionKeyMap()
     else
         nnoremap <silent> <C-O> :call FZFWithPrjFile()<CR>
     endif
-
+    " open buffer list (with FZF)
+    nnoremap <silent> <C-b> :Buffers<CR>
+    " advanced search (with FZF)
+    nnoremap <silent> <C-f> :Lines<CR>
 
     " set build command for vim
     "nnoremap <silent> <F5> :! build_cmd_for_vim.sh<CR>
