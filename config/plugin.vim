@@ -521,6 +521,26 @@ function! s:RunShellCommand(cmdline)
   setlocal nomodifiable
 endfunction
 
+" TODO: handle if current buffer is empty
+" TODO: suppress error E173: more files to edit
+function! s:openFilesInGit(cmdline)
+    let shellcmd_result = system("git show --name-only --oneline " . expand(a:cmdline))
+    if (shellcmd_result =~ "fatal: ambiguous argument.")
+        echo "[Error] current git doesn't contains commit - " . a:cmdline
+        return
+    endif
+    let files = join(split(shellcmd_result, '\n')[1:], ' ')
+    exec ':args ' . files
+endfunction
+command! -nargs=* -complete=shellcmd OpenFilesInGit call s:openFilesInGit(<q-args>)
+
+function! s:openFilesInGitDiff(cmdline)
+    let shellcmd_result = system("git diff --name-only --oneline " . expand(a:cmdline))
+    let files = join(split(shellcmd_result, '\n'), ' ')
+    exec ':args ' . files
+endfunction
+command! -nargs=* -complete=shellcmd OpenFilesInGitDiff call s:openFilesInGitDiff(<q-args>)
+
 " Clear all the items
 call g:quickmenu#reset()
 
@@ -528,10 +548,10 @@ call g:quickmenu#reset()
 let g:quickmenu_options = "HL"
 
 call g:quickmenu#append("# Navigation", '')
-"call g:quickmenu#append("Close Current Buffer", 'CloseBuffer', "Close Current Buffer - Ctrl-F4")
-call g:quickmenu#append("Open NerdTree", 'NERDTreeToggle', "Open File Navigator - F5")
-call g:quickmenu#append("Open Current File Location", 'NERDTreeFind', "Open File Navigator - Ctrl-F5")
-"function! CloseBuffer()
+call g:quickmenu#append("File Explorer", 'NERDTreeToggle', "Powered by NerdTree - F5")
+call g:quickmenu#append("File Explorer - current location", 'NERDTreeFind', "Powered by NerdTree - Ctrl-F5")
+call g:quickmenu#append("Open Files in HEAD", 'OpenFilesInGit', "Open all files in 'git show --nameonly'")
+call g:quickmenu#append("Open Files in Diff", 'OpenFilesInGitDiff', "Open all files in 'git show --nameonly'")
 
 call g:quickmenu#append("# Vim Preferences", '')
 call g:quickmenu#append("Toggle Paste", 'set paste!', "Set/Unset PASTE mode to avoid unintended indentation")
