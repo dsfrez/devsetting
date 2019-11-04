@@ -550,8 +550,8 @@ let g:quickmenu_options = "HL"
 call g:quickmenu#append("# Navigation", '')
 call g:quickmenu#append("File Explorer", 'NERDTreeToggle', "Powered by NerdTree - F5")
 call g:quickmenu#append("File Explorer - current location", 'NERDTreeFind', "Powered by NerdTree - Ctrl-F5")
-call g:quickmenu#append("Open Files in HEAD", 'OpenFilesInGit', "Open all files in 'git show --nameonly'")
-call g:quickmenu#append("Open Files in Diff", 'OpenFilesInGitDiff', "Open all files in 'git show --nameonly'")
+call g:quickmenu#append("Open All Files in HEAD", 'OpenFilesInGit', "Open all files in 'git show --nameonly'")
+call g:quickmenu#append("Open All Files in Diff", 'OpenFilesInGitDiff', "Open all files in 'git show --nameonly'")
 
 call g:quickmenu#append("# Vim Preferences", '')
 call g:quickmenu#append("Toggle Paste", 'set paste!', "Set/Unset PASTE mode to avoid unintended indentation")
