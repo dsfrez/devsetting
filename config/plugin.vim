@@ -23,6 +23,8 @@ Plug 'vim-airline/vim-airline' | Plug 'vim-airline/vim-airline-themes'
 Plug 'rafi/awesome-vim-colorschemes'
 " Highlight several words
 Plug 'vim-scripts/Mark--Karkat'
+" indentation level
+Plug 'Yggdroot/indentLine'
 " Seamless navigation with TMUX
 Plug 'christoomey/vim-tmux-navigator'
 " fix 'autoread' bug in TMUX
@@ -370,6 +372,8 @@ let g:airline#extensions#tabline#buffer_nr_show = 1         " show buffer number
 let g:airline#extensions#tabline#buffer_nr_format = '%s:'   " buffer number format
 let g:airline#extensions#tabline#buffer_idx_mode = 1        " show index of buffer
 let g:airline_powerline_fonts = 1
+
+let g:indentLine_char_list = ['|', '¦', '┆', '┊']
 
 " set unicode symbols for vim
 if !has('nvim')
