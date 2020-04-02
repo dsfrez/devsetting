@@ -46,7 +46,7 @@ Plug 'godlygeek/tabular'
 " UML - http://plantuml.com
 " TODO: sudo zypper install java
 "       https://gitlab.com/graphviz/graphviz.git
-Plug 'scrooloose/vim-slumlord'
+"Plug 'scrooloose/vim-slumlord'
 Plug 'aklt/plantuml-syntax'
 
 " git with vim - Fugitive, gitgutter
@@ -119,7 +119,7 @@ call s:useYouCompleteMe()
 call s:useDeoplete()
 
 " for quick fix??
-Plug 'ronakg/quickr-preview.vim'
+"Plug 'ronakg/quickr-preview.vim'
 
 " Testing... ------------------------------------
 Plug 'skywind3000/quickmenu.vim'
@@ -276,6 +276,8 @@ set shiftwidth=4                            " indent tab size
 set softtabstop=4                           " makes the spaces feel like real tabs
 set tabstop=4                               " tab size
 
+set nowrap                                  " no wrap
+
 "" Search """""""""""""""""""""""""""""""""""""""
 set hlsearch                                " highlight searched string
 set ignorecase                              " ignore upper/lower case ('ic')
@@ -320,8 +322,6 @@ set background=dark
 " Dim inactive windows
 let g:diminactive_enable_focus = 0 " don't use vim-tmux focus event
 function! TweakForDimInactiveWindow() abort
-    " becase there is a bug in vim-tmux focus event.
-    " I'll manage bgcolor in .tmux.conf
     highlight Normal        ctermbg=NONE
     highlight ColorColumn   ctermbg=236
 endfunction
@@ -505,8 +505,8 @@ function! AsyncBlame() range
 endfunction
 vnoremap b                 :call AsyncBlame()<CR>
 
-nnoremap <leader>s         :Ag <C-R>=expand("<cword>")<CR><CR>
-nnoremap <leader>S         :Ag <C-R>=expand("<cWORD>")<CR><CR>
+nnoremap <leader>s         :AsyncRun ag -w <C-R>=expand("<cword>")<CR> .<CR>
+nnoremap <leader>S         :AsyncRun ag -w --<C-R>=expand(&filetype)<CR> <C-R>=expand("<cword>")<CR> . <bar> grep -iv test<CR>
 
 " Show Shell Command in vim
 command! -complete=shellcmd -nargs=+ S call s:RunShellCommand(<q-args>)
