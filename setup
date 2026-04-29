@@ -1,9 +1,11 @@
 #!/bin/sh
 
-#git pull -q
+# Usage: setup [--update]
+#   --update   Update already-installed libraries and neovim to latest versions.
+#              Without this flag, existing installations are left untouched.
 
-DEVSETTING_GIT=`dirname $(readlink -f "$0")`
+DEVSETTING_GIT=$(dirname "$(readlink -f "$0")")
 
-cd $DEVSETTING_GIT/.setup_script
+cd "$DEVSETTING_GIT/.setup_script" || exit 1
 ./terminal_setup
-./library_setup
+./library_setup "$@"

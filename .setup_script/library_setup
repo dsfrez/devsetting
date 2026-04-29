@@ -1,120 +1,329 @@
 #!/bin/sh
 
+# Usage: library_setup [--update]
+#   --update   Pull latest sources and rebuild all libraries.
+#              Also reinstalls neovim to the latest version.
+
 DEVSETTING_DIR=$HOME/.devsetting
 
-## Check current environments #################################################
+## Parse arguments #############################################################
+DO_UPDATE=0
+for arg in "$@"; do
+    case "$arg" in
+        --update) DO_UPDATE=1 ;;
+    esac
+done
+
+## Detect current environment ##################################################
 supportNVIM=0
+arch=$(uname -m)
+
 case "$(uname -s)" in
-    Linux*)     machine=Linux; supportNVIM=1;;
-    Darwin*)    machine=Mac; supportNVIM=1;;
-    CYGWIN*)    machine=Cygwin;;
-    MINGW*)     machine=MinGw;;
-    *)          machine="UNKNOWN:$(uname -s)"
+    Linux*)  machine=Linux; supportNVIM=1 ;;
+    Darwin*) machine=Mac;   supportNVIM=1 ;;
+    CYGWIN*) machine=Cygwin ;;
+    MINGW*)  machine=MinGw ;;
+    *)       machine="UNKNOWN:$(uname -s)" ;;
 esac
 
+# Detect Linux distribution via /etc/os-release (standard), fallback to /etc/issue
 dist="Unsupported"
 if [ "$machine" = "Linux" ]; then
-    case "$(cat /etc/issue)" in
-        *Ubuntu*)   dist=Ubuntu;;
-        *SUSE*)     dist=SUSE;;
-        *)          dist="Unsupported"
-    esac
-fi
-
-# NeoVim - https://github.com/neovim/neovim/wiki/Installing-Neovim
-if [ $supportNVIM = 1 ] && [ -z "$(command -v nvim)" ] && [ ! -f "$DEVSETTING_DIR/bin/nvim" ]; then
-    if [ "$dist" = "SUSE" ]; then
-        cd $DEVSETTING_DIR/bin
-        wget https://github.com/neovim/neovim/releases/download/v0.3.4/nvim.appimage --no-check-certificate
-        chmod +x nvim.appimage
-        mv nvim.appimage nvim
-    elif [ "$dist" = "Ubuntu" ]; then
-        echo "Please run \"sudo apt-get install nvim\""
-    elif [ "$dist" = "Unsupported" ]; then
-        echo "this distribution doesn't support nvim - $dist"
+    if [ -f /etc/os-release ]; then
+        os_id=$(. /etc/os-release && printf "%s" "$ID")
+        os_id_like=$(. /etc/os-release && printf "%s" "${ID_LIKE:-}")
+        case "$os_id" in
+            ubuntu|debian)              dist=Ubuntu ;;
+            sles|opensuse*|suse*)       dist=SUSE ;;
+            fedora|rhel|centos|rocky*)  dist=Fedora ;;
+            arch|manjaro)               dist=Arch ;;
+            *)
+                case "$os_id_like" in
+                    *debian*|*ubuntu*) dist=Ubuntu ;;
+                    *suse*)            dist=SUSE ;;
+                    *fedora*|*rhel*)   dist=Fedora ;;
+                    *)
+                        if [ -f /etc/issue ]; then
+                            case "$(cat /etc/issue)" in
+                                *Ubuntu*) dist=Ubuntu ;;
+                                *SUSE*)   dist=SUSE ;;
+                            esac
+                        fi
+                        ;;
+                esac
+                ;;
+        esac
+    elif [ -f /etc/issue ]; then
+        case "$(cat /etc/issue)" in
+            *Ubuntu*) dist=Ubuntu ;;
+            *SUSE*)   dist=SUSE ;;
+        esac
     fi
 fi
 
-## Install prerequiste library - need root access #############################
-if [ "$dist" = "SUSE" ]; then
-    sudo zypper install --type pattern Basis-Devel
-    sudo zypper install libevent-devel ncurses-devel        # for tmux
-    sudo zypper install pcre-devel zlib-devel xz-devel      # for ag
-    sudo zypper install readline-devel                      # for cgdb
-elif [ "$dist" = "Ubuntu" ]; then
-    sudo apt-get install -y build-essential autotools-dev automake pkg-config
-    sudo apt-get install -y libevent-dev libncurses-dev         # for tmux
-    sudo apt-get install -y libpcre3-dev zlib1g-dev liblzma-dev # for ag
-    sudo apt-get install -y texinfo libreadline-dev             # for cgdb
+# Parallel build jobs
+JOBS=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+
+## Fetch the latest GitHub release download URL for a given asset pattern ######
+# Usage: github_latest_url OWNER/REPO PATTERN
+# PATTERN is an ERE applied against browser_download_url lines
+github_latest_url() {
+    repo="$1"
+    pattern="$2"
+    curl -s "https://api.github.com/repos/$repo/releases/latest" \
+        | grep '"browser_download_url"' \
+        | grep -E "$pattern" \
+        | cut -d'"' -f4 \
+        | head -1
+}
+
+## Install or update NeoVim ####################################################
+install_nvim() {
+    case "$machine" in
+        Linux)
+            case "$dist" in
+                Ubuntu)
+                    if command -v apt-get >/dev/null 2>&1; then
+                        sudo apt-get install -y neovim && return 0
+                    fi ;;
+                SUSE)
+                    if command -v zypper >/dev/null 2>&1; then
+                        sudo zypper install -y neovim && return 0
+                    fi ;;
+                Fedora)
+                    if command -v dnf >/dev/null 2>&1; then
+                        sudo dnf install -y neovim && return 0
+                    fi ;;
+                Arch)
+                    if command -v pacman >/dev/null 2>&1; then
+                        sudo pacman -S --noconfirm neovim && return 0
+                    fi ;;
+            esac
+            # Fallback: appimage (x86_64 only)
+            if [ "$arch" = "x86_64" ]; then
+                url=$(github_latest_url "neovim/neovim" 'nvim\.appimage"')
+                if [ -z "$url" ]; then
+                    printf "ERROR: Could not fetch latest nvim appimage URL\n" >&2
+                    return 1
+                fi
+                wget "$url" -O "$DEVSETTING_DIR/bin/nvim.appimage" --no-check-certificate
+                chmod +x "$DEVSETTING_DIR/bin/nvim.appimage"
+                mv "$DEVSETTING_DIR/bin/nvim.appimage" "$DEVSETTING_DIR/bin/nvim"
+            else
+                printf "NOTE: nvim appimage is only available for x86_64. Please install nvim manually.\n"
+            fi
+            ;;
+        Mac)
+            if command -v brew >/dev/null 2>&1; then
+                brew install neovim && return 0
+            fi
+            case "$arch" in
+                arm64) asset_pat='nvim-macos-arm64\.tar\.gz"' ;;
+                *)     asset_pat='nvim-macos-x86_64\.tar\.gz"' ;;
+            esac
+            url=$(github_latest_url "neovim/neovim" "$asset_pat")
+            if [ -z "$url" ]; then
+                printf "ERROR: Could not fetch latest nvim macOS URL\n" >&2
+                return 1
+            fi
+            tmpdir=$(mktemp -d)
+            curl -L "$url" -o "$tmpdir/nvim.tar.gz"
+            tar xzf "$tmpdir/nvim.tar.gz" -C "$tmpdir"
+            cp "$tmpdir"/nvim-macos*/bin/nvim "$DEVSETTING_DIR/bin/nvim"
+            rm -rf "$tmpdir"
+            ;;
+        Cygwin|MinGw)
+            printf "NOTE: Install nvim manually for %s:\n" "$machine"
+            printf "  https://github.com/neovim/neovim/releases/latest\n"
+            ;;
+    esac
+}
+
+update_nvim() {
+    printf "==> Updating neovim...\n"
+    case "$machine" in
+        Linux)
+            case "$dist" in
+                Ubuntu) sudo apt-get install -y --only-upgrade neovim && return 0 ;;
+                SUSE)   sudo zypper update -y neovim && return 0 ;;
+                Fedora) sudo dnf upgrade -y neovim && return 0 ;;
+                Arch)   sudo pacman -Syu --noconfirm neovim && return 0 ;;
+            esac
+            # Fallback: re-download appimage
+            rm -f "$DEVSETTING_DIR/bin/nvim"
+            install_nvim
+            ;;
+        Mac)
+            if command -v brew >/dev/null 2>&1; then
+                brew upgrade neovim && return 0
+            fi
+            rm -f "$DEVSETTING_DIR/bin/nvim"
+            install_nvim
+            ;;
+        *)
+            printf "NOTE: Update nvim manually for %s.\n" "$machine" ;;
+    esac
+}
+
+if [ "$DO_UPDATE" = "1" ]; then
+    update_nvim
+elif [ "$supportNVIM" = "1" ] \
+    && ! command -v nvim >/dev/null 2>&1 \
+    && [ ! -f "$DEVSETTING_DIR/bin/nvim" ]; then
+    install_nvim
 fi
 
-## Download / Install external libraries ######################################
+## Install prerequisite libraries ##############################################
+install_prerequisites() {
+    case "$machine" in
+        Linux)
+            case "$dist" in
+                SUSE)
+                    sudo zypper install -y --type pattern Basis-Devel
+                    sudo zypper install -y \
+                        libevent-devel ncurses-devel \
+                        pcre-devel zlib-devel xz-devel \
+                        readline-devel \
+                        cmake autoconf automake pkg-config
+                    ;;
+                Ubuntu)
+                    sudo apt-get install -y \
+                        build-essential autotools-dev automake pkg-config cmake \
+                        libevent-dev libncurses-dev \
+                        libpcre3-dev zlib1g-dev liblzma-dev \
+                        texinfo libreadline-dev
+                    ;;
+                Fedora)
+                    sudo dnf install -y \
+                        gcc gcc-c++ make autoconf automake pkg-config cmake \
+                        libevent-devel ncurses-devel \
+                        pcre-devel zlib-devel xz-devel \
+                        readline-devel texinfo
+                    ;;
+                Arch)
+                    sudo pacman -S --noconfirm \
+                        base-devel cmake \
+                        libevent ncurses \
+                        pcre zlib xz \
+                        readline
+                    ;;
+                *)
+                    printf "WARNING: Unsupported distribution '%s'. Install build dependencies manually.\n" "$dist"
+                    ;;
+            esac
+            ;;
+        Mac)
+            if command -v brew >/dev/null 2>&1; then
+                brew install \
+                    libevent ncurses \
+                    pcre2 zlib xz \
+                    readline \
+                    automake autoconf pkg-config cmake
+            else
+                printf "WARNING: Homebrew not found. Install it from https://brew.sh/ then re-run.\n"
+            fi
+            ;;
+        Cygwin)
+            printf "NOTE: Install Cygwin packages via the Cygwin installer or apt-cyg:\n"
+            printf "  libevent-devel libncurses-devel libpcre-devel zlib-devel readline libreadline-devel\n"
+            ;;
+        MinGw)
+            printf "NOTE: Install MSYS2/MinGW packages:\n"
+            printf "  pacman -S mingw-w64-x86_64-libevent mingw-w64-x86_64-ncurses mingw-w64-x86_64-pcre\n"
+            ;;
+    esac
+}
+install_prerequisites
+
+## Download and build (or update) external libraries ###########################
+# Usage: install_lib NAME SRC_URL [OUTPUT_BINARY_RELATIVE_PATH]
+# If OUTPUT_BINARY_RELATIVE_PATH is empty, only download (no build).
+# Respects $DO_UPDATE: if set, pulls latest sources and rebuilds.
 install_lib() {
-    NAME=$1
-    SRC=$2
-    OUT=$3
-    # Download Library
-    if [ ! -d "$DEVSETTING_DIR/git/$NAME" ]; then
+    NAME="$1"
+    SRC="$2"
+    OUT="$3"
+    destdir="$DEVSETTING_DIR/git/$NAME"
+
+    # Download or update sources
+    if [ ! -d "$destdir" ]; then
         case "$SRC" in
-            *tar.gz)
-                wget $SRC -P $DEVSETTING_DIR/git --no-check-certificate
-                fileName=${SRC##*/}
-                tar zxvf $DEVSETTING_DIR/git/$fileName -C $DEVSETTING_DIR/git
-                rm $DEVSETTING_DIR/git/$fileName
-                mv $DEVSETTING_DIR/git/${fileName%.tar.gz} $DEVSETTING_DIR/git/$NAME
-                ;;
-            *.git)
-                git clone $SRC $DEVSETTING_DIR/git/$NAME
-                ;;
-            *github*)
-                git clone $SRC $DEVSETTING_DIR/git/$NAME
+            *.tar.gz)
+                fileName="${SRC##*/}"
+                wget "$SRC" -O "$DEVSETTING_DIR/git/$fileName" --no-check-certificate
+                tar zxf "$DEVSETTING_DIR/git/$fileName" -C "$DEVSETTING_DIR/git"
+                rm -f "$DEVSETTING_DIR/git/$fileName"
+                extracted="$DEVSETTING_DIR/git/${fileName%.tar.gz}"
+                [ -d "$extracted" ] && mv "$extracted" "$destdir"
                 ;;
             *)
-                echo "Unable to download library"
-                echo "Lib: $NAME / Address: $SRC"
+                git clone "$SRC" "$destdir"
+                ;;
+        esac
+    elif [ "$DO_UPDATE" = "1" ]; then
+        printf "==> Updating %s...\n" "$NAME"
+        case "$SRC" in
+            *.tar.gz)
+                # For tarballs, remove and re-download to get latest
+                rm -rf "$destdir"
+                install_lib "$NAME" "$SRC" "$OUT"
+                return
+                ;;
+            *)
+                git -C "$destdir" pull --ff-only || printf "WARNING: Could not update %s\n" "$NAME" >&2
                 ;;
         esac
     fi
 
-    if [ -z $OUT ]; then
-        echo "just downloading"
-        return 0
-    fi
+    [ -z "$OUT" ] && return 0  # download-only
 
-    outputName="$DEVSETTING_DIR/git/$NAME/$OUT"
+    outputName="$destdir/$OUT"
     if [ "$machine" = "Cygwin" ] || [ "$machine" = "MinGw" ]; then
-        outputName="$outputName.exe"
+        outputName="${outputName}.exe"
     fi
 
-    # Build Library
-    if [ -d "$DEVSETTING_DIR/git/$NAME" ] && [ ! -f $outputName ]; then
-        cd $DEVSETTING_DIR/git/$NAME
+    # Build if binary is missing, or always rebuild on --update
+    if [ -d "$destdir" ] && { [ ! -f "$outputName" ] || [ "$DO_UPDATE" = "1" ]; }; then
+        cd "$destdir" || return 1
         if [ -f "autogen.sh" ]; then
             sh ./autogen.sh
         fi
-        if [ -f "configure" ]; then
-            ./configure && make
+        if [ -f "CMakeLists.txt" ] && ! [ -f "configure" ]; then
+            mkdir -p build
+            cd build || return 1
+            cmake .. -DCMAKE_BUILD_TYPE=Release
+            make -j"$JOBS"
+            cd "$destdir" || return 1
+        elif [ -f "configure" ]; then
+            ./configure && make -j"$JOBS"
         fi
     fi
 
-    # Copy Library
+    # Copy binary
     if [ -f "$outputName" ]; then
         cp -f "$outputName" "$DEVSETTING_DIR/bin/$NAME"
     else
-        echo "$NAME was not installed"
+        printf "WARNING: %s was not built successfully\n" "$NAME" >&2
     fi
 }
 
 install_lib ag https://github.com/ggreer/the_silver_searcher.git ag
-if [ ! "$dist" = "SUSE" ]; then
-    # cgdb has build errors in SUSE ..
-    install_lib cgdb git://github.com/cgdb/cgdb.git cgdb/cgdb
-fi
-install_lib lynx https://invisible-mirror.net/archives/lynx/tarballs/lynx2.8.9rel.1.tar.gz lynx
-install_lib tig https://github.com/jonas/tig.git src/tig
-install_lib tmux https://github.com/tmux/tmux.git tmux
-install_lib uctags https://github.com/universal-ctags/ctags.git ctags
 
-install_lib dircolors-solarized https://github.com/seebi/dircolors-solarized.git
+if [ "$dist" != "SUSE" ]; then
+    install_lib cgdb https://github.com/cgdb/cgdb.git cgdb/cgdb
+fi
+
+LYNX_URL=$(github_latest_url "nicowillis/lynx" 'lynx.*\.tar\.gz"')
+if [ -z "$LYNX_URL" ]; then
+    LYNX_URL="https://invisible-mirror.net/archives/lynx/tarballs/lynx2.9.2.tar.gz"
+fi
+install_lib lynx "$LYNX_URL" lynx
+
+install_lib tig    https://github.com/jonas/tig.git                  src/tig
+install_lib tmux   https://github.com/tmux/tmux.git                  tmux
+install_lib uctags https://github.com/universal-ctags/ctags.git      build/ctags
+
+# Color themes (download only)
+install_lib dircolors-solarized     https://github.com/seebi/dircolors-solarized.git
 install_lib mintty-colors-solarized https://github.com/mavnn/mintty-colors-solarized.git
-install_lib tig-molokai https://github.com/edentsai/tig-theme-molokai-like.git
+install_lib tig-molokai             https://github.com/edentsai/tig-theme-molokai-like.git

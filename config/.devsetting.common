@@ -75,98 +75,73 @@ ssh_func ()
 alias ssh=ssh_func
 
 export DEVSETTING_BIN=$DEVSETTING_DIR/bin
-vim_func ()
-{
-    if [ -f "$DEVSETTING_BIN/nvim" ]; then
-        "$DEVSETTING_BIN/nvim" "$@"
-    elif [ -f "$(which nvim 2>/dev/null)" ]; then
-        "$(which nvim)" "$@"
+
+# Helper: resolve a command — prefer $DEVSETTING_BIN, then system PATH.
+# Usage: _devsetting_bin NAME [FALLBACK_NAME]
+# Prints the executable path, or returns 1 if not found anywhere.
+_devsetting_bin() {
+    local bin="$DEVSETTING_BIN/$1"
+    local fallback="${2:-$1}"
+    if [ -f "$bin" ]; then
+        printf "%s" "$bin"
+    elif command -v "$fallback" >/dev/null 2>&1; then
+        printf "%s" "$(command -v "$fallback")"
     else
-        vim "$@"
+        return 1
     fi
-    return 0
+}
+
+vim_func() {
+    local bin
+    bin=$(_devsetting_bin nvim nvim) || bin=$(command -v vim 2>/dev/null) || { echo "vim/nvim not found"; return 1; }
+    "$bin" "$@"
 }
 alias vi=vim_func
 
-ag_func()
-{
-    if [ -f "$DEVSETTING_BIN/ag" ]; then
-        "$DEVSETTING_BIN/ag" "$@"
-    elif [ -f "$(which ag 2>/dev/null)" ]; then
-        "$(which ag)" "$@"
-    else
-        echo "Please install The Silver Searcher - https://github.com/ggreer/the_silver_searcher"
-        return -1
-    fi
-    return 0
+ag_func() {
+    local bin
+    bin=$(_devsetting_bin ag) || { echo "ag not found. Install: https://github.com/ggreer/the_silver_searcher"; return 1; }
+    "$bin" "$@"
 }
 alias ag=ag_func
 
-cgdb_func()
-{
-    if [ -f "$DEVSETTING_BIN/cgdb" ]; then
-        "$DEVSETTING_BIN/cgdb" "$@"
-    elif [ -f "$(which cgdb 2>/dev/null)" ]; then
-        "$(which cgdb)" "$@"
-    else
-        echo "Please install cgdb - https://cgdb.github.io"
-        return -1
-    fi
-    return 0
+cgdb_func() {
+    local bin
+    bin=$(_devsetting_bin cgdb) || { echo "cgdb not found. Install: https://cgdb.github.io"; return 1; }
+    "$bin" "$@"
 }
 alias cgdb=cgdb_func
 
-lynx_func()
-{
-    # Incomplete ...
-    if [ -f "$DEVSETTING_BIN/lynx" ]; then
-        cat "$1" | $DEVSETTING_BIN/lynx -cfg=$DEVSETTING_DIR/git/lynx/lynx.cfg -lss=$DEVSETTING_DIR/git/lynx/samples/lynx.lss -stdin
-    else
-        echo "Please install lynx - https://lynx.browser.org/"
-        return -1
+lynx_func() {
+    local bin
+    bin=$(_devsetting_bin lynx) || { echo "lynx not found. Install: https://lynx.browser.org/"; return 1; }
+    if [ $# -eq 0 ]; then
+        echo "Usage: open_html FILE"
+        return 1
     fi
+    "$bin" -cfg="$DEVSETTING_DIR/git/lynx/lynx.cfg" \
+           -lss="$DEVSETTING_DIR/git/lynx/samples/lynx.lss" \
+           "$@"
 }
 alias open_html=lynx_func
 
-tig_func()
-{
-    if [ -f "$DEVSETTING_BIN/tig" ]; then
-        "$DEVSETTING_BIN/tig" "$@"
-    elif [ -f "$(which tig 2>/dev/null)" ]; then
-        "$(which tig)" "$@"
-    else
-        echo "Please install tig - https://jonas.github.io/tig"
-        return -1
-    fi
-    return 0
+tig_func() {
+    local bin
+    bin=$(_devsetting_bin tig) || { echo "tig not found. Install: https://jonas.github.io/tig"; return 1; }
+    "$bin" "$@"
 }
 alias tig=tig_func
 
-tmux_func()
-{
-    TERM=screen-256color
-    if [ -f "$DEVSETTING_BIN/tmux" ]; then
-        "$DEVSETTING_BIN/tmux" "$@"
-    elif [ -f "$(which tmux 2>/dev/null)" ]; then
-        "$(which tmux)" "$@"
-    else
-        echo "Please install tmux - https://github.com/tmux/tmux/wiki"
-        return -1
-    fi
-    return 0
+tmux_func() {
+    local bin
+    bin=$(_devsetting_bin tmux) || { echo "tmux not found."; return 1; }
+    TERM=screen-256color "$bin" "$@"
 }
 alias tmux=tmux_func
 
-ctags_func ()
-{
-    if [ -f "$DEVSETTING_BIN/uctags" ]; then
-        "$DEVSETTING_BIN/uctags" "$@"
-    elif [ -f "$(which ctags 2>/dev/null)" ]; then
-        "$(which ctags)" "$@"
-    else
-        echo "Please install universal ctags(https://github.com/universal-ctags/ctags.git) or exuberant-ctags"
-        return -1
-    fi
-    return 0
+ctags_func() {
+    local bin
+    bin=$(_devsetting_bin uctags ctags) || { echo "ctags not found. Install: https://github.com/universal-ctags/ctags"; return 1; }
+    "$bin" "$@"
 }
 alias ctags=ctags_func

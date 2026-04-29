@@ -75,7 +75,7 @@ Plug 'wesleyche/srcexpl', { 'on': 'SrcExplToggle' }
 Plug 'majutsushi/tagbar'
 
 " Asynchronous linting/fixing for Vim
-Plug 'w0rp/ale'
+"Plug 'w0rp/ale'
 
 " Auto Complete - YouCompleteMe (requires Python >= 2.7.1 or >= 3.4)
 let g:myAutocompletePlugin = 'Deoplete'
@@ -107,10 +107,10 @@ function! s:useDeoplete()
         Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 
         " For deoplete autocomplete
-        Plug 'zchee/deoplete-jedi'
+        "Plug 'zchee/deoplete-jedi'
         Plug 'Shougo/neco-syntax'
         Plug 'Shougo/neco-vim'
-        Plug 'davidhalter/jedi-vim'
+        "Plug 'davidhalter/jedi-vim'
         "Plug 'zchee/deoplete-zsh'
     endif
 endfunction
@@ -120,6 +120,10 @@ call s:useDeoplete()
 
 " for quick fix??
 "Plug 'ronakg/quickr-preview.vim'
+
+Plug 'github/copilot.vim'
+"let g:copilot_node_command = "~/.config/nvm/versions/node/v16.15.0/bin/node"
+let g:copilot_node_command = "~/.config/nvm/versions/node/v20.15.0/bin/node"
 
 " Testing... ------------------------------------
 Plug 'skywind3000/quickmenu.vim'
@@ -171,7 +175,7 @@ function! s:setFunctionKeyMap()
     " move to next buffer
     nnoremap <silent> <F4> :bnext!<CR>
     " close current buffer and move to previous buffer
-    nnoremap <silent> <C-F4> :call CloseBuffer()<CR>
+    nnoremap <silent> <F5> :call CloseBuffer()<CR>
 
     " open new buffer
     nnoremap <silent> <C-N> :enew<CR>
@@ -189,9 +193,9 @@ function! s:setFunctionKeyMap()
     " set build command for vim
     "nnoremap <silent> <F5> :! build_cmd_for_vim.sh<CR>
     " open file explorer
-    nnoremap <silent> <F5> :NERDTreeToggle<CR>
+    nnoremap <silent> <F9> :NERDTreeToggle<CR>
     " open file explorer at current folder
-    nnoremap <silent> <C-F5> :NERDTreeFind<CR>
+    nnoremap <silent> <C-F9> :NERDTreeFind<CR>
 
     " switch to .h <-> .cc => TODO: implement this feature with FZF
     nnoremap <silent> <F8> :e %:p:s,.h$,.X123X,:s,.cc$,.h,:s,.X123X$,.cc,<CR>

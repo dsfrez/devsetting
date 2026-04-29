@@ -11,7 +11,7 @@
 # this will generate cscope.files, cscope.out, tags
 #################################################
 
-ARGS='-iname *.cpp -o -iname *.cc -o -iname *.h -o -iname *.hh -o -iname *.hpp -o -iname *.c -o -iname *.java -o -iname *.py -o -iname *.xml'
+ARGS='-iname *.cpp -o -iname *.cc -o -iname *.h -o -iname *.hh -o -iname *.hpp -o -iname *.c -o -iname *.java -o -iname *.py -o -iname *.xml -o -iname *.sql'
 ADDITIONAL_FILES="*.mk *.xml *.ninja *.idl *.gypi *.gyp *.in *.qml *.bb CMakeLists.txt"
 PRJDIRS=".prjdirs"
 set -f
@@ -46,7 +46,8 @@ do
 echo -n "${line} "
 done < .prjdirs)
 echo "Listing files in $DIRS"
-find $DIRS $ARGS | grep -v 'unittest' > cscope.files
+#find $DIRS $ARGS | grep -v 'unittest' > cscope.files
+find $DIRS $ARGS > cscope.files
 
 sort -u cscope.files -o cscope.files
 
