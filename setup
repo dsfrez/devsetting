@@ -1,10 +1,47 @@
 #!/bin/sh
 
-# Usage: setup [--update]
-#   --update   Update already-installed libraries and neovim to latest versions.
-#              Without this flag, existing installations are left untouched.
-
 DEVSETTING_GIT=$(dirname "$(readlink -f "$0")")
+
+usage() {
+    cat <<EOF
+Usage: setup [OPTIONS]
+
+Set up or update a personal development environment.
+
+On first run, this script:
+  - Creates ~/.devsetting/ directory structure
+  - Symlinks config files (.vimrc, .tmux.conf, .tigrc) into \$HOME
+  - Registers devsetting in .bashrc / .zshrc
+  - Installs system dependencies (requires sudo)
+  - Builds and installs tools from source into ~/.devsetting/bin/
+    (ag, tig, tmux, uctags, cgdb, lynx)
+  - Installs neovim
+
+Options:
+  --update    Pull latest sources and rebuild all libraries.
+              Also upgrades neovim to the latest version.
+              Existing installations are left untouched without this flag.
+  -h, --help  Show this help message and exit.
+
+Supported platforms:
+  Linux  : Ubuntu/Debian, SUSE/openSUSE, Fedora/RHEL, Arch
+  macOS  : x86_64 and arm64 (requires Homebrew for dependencies)
+  WSL    : treated as the underlying Linux distribution
+  Cygwin : dependency installation guidance printed; manual steps required
+  MinGW  : dependency installation guidance printed; manual steps required
+
+Examples:
+  ./setup              # Fresh install
+  ./setup --update     # Update all libraries and neovim
+
+EOF
+}
+
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help) usage; exit 0 ;;
+    esac
+done
 
 cd "$DEVSETTING_GIT/.setup_script" || exit 1
 ./terminal_setup
