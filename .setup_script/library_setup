@@ -77,6 +77,30 @@ github_latest_url() {
         | head -1
 }
 
+# Download a nvim tarball release, extract into $DEVSETTING_DIR/bin/,
+# and create a symlink at $DEVSETTING_DIR/bin/nvim -> .../bin/nvim.
+# Usage: _install_nvim_tarball ASSET_PATTERN
+_install_nvim_tarball() {
+    url=$(github_latest_url "neovim/neovim" "$1")
+    if [ -z "$url" ]; then
+        printf "ERROR: Could not fetch latest nvim URL (pattern: %s)\n" "$1" >&2
+        return 1
+    fi
+    tarball="$DEVSETTING_DIR/bin/nvim-download.tar.gz"
+    wget "$url" -O "$tarball" --no-check-certificate
+    tar xzf "$tarball" -C "$DEVSETTING_DIR/bin/"
+    rm -f "$tarball"
+    # The tarball extracts to a versioned directory, e.g. nvim-linux-x86_64/ or nvim-macos-arm64/
+    # Find the nested binary and create a stable symlink.
+    nvim_bin=$(find "$DEVSETTING_DIR/bin/" -maxdepth 3 -name nvim -type f | head -1)
+    if [ -z "$nvim_bin" ]; then
+        printf "ERROR: nvim binary not found after extraction\n" >&2
+        return 1
+    fi
+    ln -sf "$nvim_bin" "$DEVSETTING_DIR/bin/nvim"
+    printf "nvim installed: %s\n" "$nvim_bin"
+}
+
 ## Install or update NeoVim ####################################################
 install_nvim() {
     case "$machine" in
@@ -99,19 +123,17 @@ install_nvim() {
                         sudo pacman -S --noconfirm neovim && return 0
                     fi ;;
             esac
-            # Fallback: appimage (x86_64 only)
-            if [ "$arch" = "x86_64" ]; then
-                url=$(github_latest_url "neovim/neovim" 'nvim\.appimage"')
-                if [ -z "$url" ]; then
-                    printf "ERROR: Could not fetch latest nvim appimage URL\n" >&2
+            # Fallback: pre-built tarball extracted into $DEVSETTING_DIR/bin/,
+            # with a symlink at $DEVSETTING_DIR/bin/nvim pointing to the binary.
+            case "$arch" in
+                x86_64) asset_pat='nvim-linux-x86_64\.tar\.gz"' ;;
+                arm64)  asset_pat='nvim-linux-arm64\.tar\.gz"' ;;
+                *)
+                    printf "NOTE: No pre-built nvim for arch '%s'. Please install nvim manually.\n" "$arch"
                     return 1
-                fi
-                wget "$url" -O "$DEVSETTING_DIR/bin/nvim.appimage" --no-check-certificate
-                chmod +x "$DEVSETTING_DIR/bin/nvim.appimage"
-                mv "$DEVSETTING_DIR/bin/nvim.appimage" "$DEVSETTING_DIR/bin/nvim"
-            else
-                printf "NOTE: nvim appimage is only available for x86_64. Please install nvim manually.\n"
-            fi
+                    ;;
+            esac
+            _install_nvim_tarball "$asset_pat"
             ;;
         Mac)
             if command -v brew >/dev/null 2>&1; then
@@ -121,16 +143,7 @@ install_nvim() {
                 arm64) asset_pat='nvim-macos-arm64\.tar\.gz"' ;;
                 *)     asset_pat='nvim-macos-x86_64\.tar\.gz"' ;;
             esac
-            url=$(github_latest_url "neovim/neovim" "$asset_pat")
-            if [ -z "$url" ]; then
-                printf "ERROR: Could not fetch latest nvim macOS URL\n" >&2
-                return 1
-            fi
-            tmpdir=$(mktemp -d)
-            curl -L "$url" -o "$tmpdir/nvim.tar.gz"
-            tar xzf "$tmpdir/nvim.tar.gz" -C "$tmpdir"
-            cp "$tmpdir"/nvim-macos*/bin/nvim "$DEVSETTING_DIR/bin/nvim"
-            rm -rf "$tmpdir"
+            _install_nvim_tarball "$asset_pat"
             ;;
         Cygwin|MinGw)
             printf "NOTE: Install nvim manually for %s:\n" "$machine"
@@ -149,7 +162,7 @@ update_nvim() {
                 Fedora) sudo dnf upgrade -y neovim && return 0 ;;
                 Arch)   sudo pacman -Syu --noconfirm neovim && return 0 ;;
             esac
-            # Fallback: re-download appimage
+            # Fallback: re-download tarball
             rm -f "$DEVSETTING_DIR/bin/nvim"
             install_nvim
             ;;
@@ -160,8 +173,6 @@ update_nvim() {
             rm -f "$DEVSETTING_DIR/bin/nvim"
             install_nvim
             ;;
-        *)
-            printf "NOTE: Update nvim manually for %s.\n" "$machine" ;;
     esac
 }
 
