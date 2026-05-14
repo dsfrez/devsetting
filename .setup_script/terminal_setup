@@ -38,13 +38,15 @@ fi
 [ ! -d "$DEVSETTING_DIR/git" ]    && mkdir -p "$DEVSETTING_DIR/git"
 [ ! -L "$DEVSETTING_DIR/config" ] && ln -s "$DEVSETTING_GIT/config" "$DEVSETTING_DIR/config"
 [ ! -L "$DEVSETTING_DIR/script" ] && ln -s "$DEVSETTING_GIT/script" "$DEVSETTING_DIR/script"
-[ ! -d "$HOME/.vim" ]             && mkdir -p "$HOME/.vim"
-
 if [ "$supportNVIM" = "1" ]; then
-    if [ ! -d "$HOME/.config/nvim" ] && [ ! -L "$HOME/.config/nvim" ]; then
-        mkdir -p "$HOME/.config"
-        ln -s "$HOME/.vim" "$HOME/.config/nvim"
+    mkdir -p "$HOME/.config"
+    if [ -L "$HOME/.config/nvim" ]; then
+        unlink "$HOME/.config/nvim"
+    elif [ -d "$HOME/.config/nvim" ]; then
+        systemMessage="${systemMessage}nvim config backed up to $backupDir\n"
+        mv "$HOME/.config/nvim" "$backupDir"
     fi
+    ln -s "$DEVSETTING_DIR/config/nvim" "$HOME/.config/nvim"
 fi
 
 ## Backup old configs and create symlinks ######################################
@@ -68,19 +70,6 @@ link_config() {
 link_config .vimrc
 link_config .tigrc
 link_config .tmux.conf
-
-if [ "$supportNVIM" = "1" ]; then
-    nvim_init="$HOME/.config/nvim/init.vim"
-    if [ -f "$nvim_init" ] && [ ! -L "$nvim_init" ]; then
-        systemMessage="${systemMessage}init.vim backed up to $backupDir\n"
-        mv "$nvim_init" "$backupDir"
-    elif [ -L "$nvim_init" ]; then
-        systemMessage="${systemMessage}Updating symlink: init.vim\n"
-        unlink "$nvim_init"
-    fi
-    mkdir -p "$HOME/.config/nvim"
-    ln -s "$HOME/.vimrc" "$nvim_init"
-fi
 
 ## Register devsetting in shell rc files #######################################
 bashInit=".devsetting.bash"

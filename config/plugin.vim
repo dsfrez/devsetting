@@ -1,3 +1,5 @@
+" DEPRECATED: Neovim config has moved to config/nvim/ (lazy.nvim + Lua).
+" This file is kept for vanilla vim fallback only.
 """""""""""""""""""""""""""""""""""""""""""""""""
 " Plugins - powered by Vim-Plug
 "
@@ -509,8 +511,23 @@ function! AsyncBlame() range
 endfunction
 vnoremap b                 :call AsyncBlame()<CR>
 
-nnoremap <leader>s         :AsyncRun ag -w <C-R>=expand("<cword>")<CR> .<CR>
-nnoremap <leader>S         :AsyncRun ag -w --<C-R>=expand(&filetype)<CR> <C-R>=expand("<cword>")<CR> . <bar> grep -iv test<CR>
+function! s:AgTypeArg(ft)
+    " Map vim filetypes to ag file-type arguments
+    let l:type_map = {
+        \ 'cpp':        '--cpp',
+        \ 'c':          '--cc',
+        \ 'xml':        '--xml',
+        \ 'yacc':       '--yacc',
+        \ 'lex':        '-G "\.l$"',
+        \ 'python':     '--python',
+        \ 'javascript': '--js',
+        \ 'typescript': '--ts',
+        \ }
+    return get(l:type_map, a:ft, '--' . a:ft)
+endfunction
+
+nnoremap <leader>s         :AsyncRun ag -w <C-R>=expand("<cword>")<CR><CR>
+nnoremap <leader>S         :execute 'AsyncRun ag -w ' . <SID>AgTypeArg(&filetype) . ' ' . expand("<cword>") . ' \| ag -iv test'<CR>
 
 " Show Shell Command in vim
 command! -complete=shellcmd -nargs=+ S call s:RunShellCommand(<q-args>)
@@ -565,3 +582,6 @@ call g:quickmenu#append("# Vim Preferences", '')
 call g:quickmenu#append("Toggle Paste", 'set paste!', "Set/Unset PASTE mode to avoid unintended indentation")
 call g:quickmenu#append("Toggle Cursorcolumn", 'set cursorcolumn!', "Show/Hide cursor column")
 call g:quickmenu#append("Toggle Word wrap", 'set wrap!', "Set/Unset word wrap")
+
+call g:quickmenu#append("# Claude", '')
+call g:quickmenu#append("Open Claude", 'botright vsp | vertical resize 80 | se nonu | terminal claude', "Open Claude in a vertical split terminal - <leader>c")

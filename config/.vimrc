@@ -1,3 +1,5 @@
+" DEPRECATED: Neovim config has moved to config/nvim/ (lazy.nvim + Lua).
+" This file is kept for vanilla vim fallback only.
 """""""""""""""""""""""""""""""""""""""""""""""""
 " Default vim directory : $HOME/.vim
 "
@@ -23,4 +25,9 @@ let configLocation = '$HOME/.devsetting/config'
 let pluginVim = expand(configLocation . '/plugin.vim')
 if !empty(glob(pluginVim))
     exec ':source ' . pluginVim
+endif
+
+if has('nvim')
+    nnoremap <silent> <leader>c :botright vsp <BAR> vertical resize 80 <BAR> se nonu <BAR> terminal claude<CR>i
+    tnoremap <Esc> <C-\><C-n>
 endif
