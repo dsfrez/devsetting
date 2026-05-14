@@ -1,5 +1,5 @@
--- Gated behind SAP_COPILOT=1 environment variable
-if vim.env.SAP_COPILOT ~= "1" then
+-- Gated behind DEVSETTING_CORP=1 environment variable
+if vim.env.DEVSETTING_CORP ~= "1" then
   return {}
 end
 

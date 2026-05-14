@@ -26,9 +26,11 @@ return {
       vim.fn["quickmenu#append"]("Toggle Cursorcolumn", "set cursorcolumn!", "Show/Hide cursor column")
       vim.fn["quickmenu#append"]("Toggle Word wrap", "set wrap!", "Set/Unset word wrap")
 
-      vim.fn["quickmenu#append"]("# Claude", "")
-      vim.fn["quickmenu#append"]("Open Claude (side)", "botright vsp | vertical resize 80 | se nonu | terminal claude", "Open Claude in vertical split - <leader>c")
-      vim.fn["quickmenu#append"]("Open Claude (fullscreen)", "enew | se nonu | terminal claude", "Open Claude in full screen")
+      if vim.env.DEVSETTING_CORP == "1" then
+        vim.fn["quickmenu#append"]("# Claude", "")
+        vim.fn["quickmenu#append"]("Open Claude (side)", "botright vsp | vertical resize 80 | se nonu | terminal claude", "Open Claude in vertical split - <leader>c")
+        vim.fn["quickmenu#append"]("Open Claude (fullscreen)", "enew | se nonu | terminal claude", "Open Claude in full screen")
+      end
     end,
   },
   -- Tagbar

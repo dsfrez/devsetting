@@ -124,8 +124,10 @@ end, { desc = "Ag search word (filetype, no test)" })
 -- AsyncRun git blame (visual)
 map("v", "b", async_blame, { desc = "Git blame selection" })
 
--- Claude terminal
-map("n", "<leader>c", "<cmd>botright vsp | vertical resize 80 | se nonu | terminal claude<CR>i", { desc = "Open Claude" })
+-- Claude terminal (only in corp environment)
+if vim.env.DEVSETTING_CORP == "1" then
+  map("n", "<leader>c", "<cmd>botright vsp | vertical resize 80 | se nonu | terminal claude<CR>i", { desc = "Open Claude" })
+end
 
 -- Shell command in buffer
 vim.api.nvim_create_user_command("S", function(opts)
