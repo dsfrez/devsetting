@@ -16,8 +16,8 @@ return {
       vim.fn["quickmenu#reset"]()
 
       vim.fn["quickmenu#append"]("# Navigation", "")
-      vim.fn["quickmenu#append"]("File Explorer", "NvimTreeToggle", "Toggle file explorer - F9")
-      vim.fn["quickmenu#append"]("File Explorer - current location", "NvimTreeFindFile", "Find current file - Ctrl-F9")
+      vim.fn["quickmenu#append"]("File Explorer  [<F9>]", "NvimTreeToggle", "Toggle file explorer")
+      vim.fn["quickmenu#append"]("File Explorer - current location  [<C-F9>]", "NvimTreeFindFile", "Find current file")
       vim.fn["quickmenu#append"]("Open All Files in HEAD", "OpenFilesInGit", "Open all files in 'git show --name-only'")
       vim.fn["quickmenu#append"]("Open All Files in Diff", "OpenFilesInGitDiff", "Open all files in 'git diff --name-only'")
 
@@ -28,8 +28,27 @@ return {
 
       if vim.env.DEVSETTING_CORP == "1" then
         vim.fn["quickmenu#append"]("# Claude", "")
-        vim.fn["quickmenu#append"]("Open Claude (side)", "botright vsp | vertical resize 80 | se nonu | terminal claude", "Open Claude in vertical split - <leader>c")
+        vim.fn["quickmenu#append"]("Open Claude (side)  [<leader>c]", "botright vsp | vertical resize 80 | se nonu | terminal claude", "Open Claude in vertical split")
         vim.fn["quickmenu#append"]("Open Claude (fullscreen)", "enew | se nonu | terminal claude", "Open Claude in full screen")
+        -- Send literal Esc byte to a claude terminal (interrupt claude without leaving terminal mode - F6)
+        vim.api.nvim_create_user_command("ClaudeSendEsc", function()
+          local target_job = nil
+          for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+            if vim.api.nvim_buf_is_loaded(buf) then
+              local name = vim.api.nvim_buf_get_name(buf)
+              if name:match("claude") and vim.bo[buf].buftype == "terminal" then
+                target_job = vim.b[buf].terminal_job_id
+                break
+              end
+            end
+          end
+          if target_job then
+            vim.fn.chansend(target_job, "\27")
+          else
+            vim.notify("No claude terminal buffer found", vim.log.levels.WARN)
+          end
+        end, {})
+        vim.fn["quickmenu#append"]("Send Esc to Claude  [<F6> in claude buf]", "ClaudeSendEsc", "Interrupt claude (send Esc)")
       end
     end,
   },

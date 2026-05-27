@@ -87,7 +87,9 @@ map("n", "<A-w>", "<C-w>w", { desc = "Window next" })
 vim.g.terminal_scrollback_buffer_size = 100000
 map("n", "<A-t>", "<cmd>bel sp | resize 15 | se nonu | terminal<CR>i", { desc = "Open terminal" })
 
--- Esc in terminal mode: pass through to fzf, otherwise exit terminal mode
+-- Esc in terminal mode: pass through to fzf, otherwise exit terminal mode.
+-- For claude buffers, also map <F6> to send a literal Esc byte to the program
+-- (so the user can interrupt claude without leaving terminal mode).
 vim.api.nvim_create_autocmd("TermOpen", {
   pattern = "*",
   callback = function()
@@ -96,6 +98,9 @@ vim.api.nvim_create_autocmd("TermOpen", {
     if bufname:match("fzf") then
       -- Let fzf handle Esc natively
       vim.api.nvim_buf_set_keymap(buf, "t", "<Esc>", "<Esc>", { noremap = true, silent = true })
+    end
+    if bufname:match("claude") then
+      vim.api.nvim_buf_set_keymap(buf, "t", "<F6>", "<Esc>", { noremap = true, silent = true })
     end
   end,
 })
